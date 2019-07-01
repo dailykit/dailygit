@@ -1,0 +1,39 @@
+{
+  "name": "node-git",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "download": "^7.1.0",
+    "express": "^4.17.1",
+    "https": "^1.0.0",
+    "node-pre-gyp": "^0.13.0",
+    "nodegit": "^0.24.3",
+    "npm-check": "^5.9.0",
+    "path": "^0.12.7",
+    "pm2": "^3.5.1",
+    "promise": "^8.0.3",
+    "walk": "^2.3.14",
+    "yarn": "^1.16.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.4.3",
+    "@babel/core": "^7.4.3",
+    "@babel/preset-env": "^7.4.3",
+    "babel-preset-env": "^1.7.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dailykit/Read-git-files.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dailykit/Read-git-files/issues"
+  },
+  "homepage": "https://github.com/dailykit/Read-git-files#readme",
+  "description": ""
+}
