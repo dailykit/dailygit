@@ -5,7 +5,7 @@ const util = require('util');
 const testFolder = 'mychatwidget';
 const fs = require('fs');
 // const readdir = util.promisify(fs.readdir);
-
+require("babel-polyfill");
 
 const readdir = util.promisify(fs.readdir, (resolve, reject) => {
   resolve('ok');
