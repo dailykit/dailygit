@@ -63,13 +63,13 @@ app.get('/loadfiles',(req, res) => {
 
 })
 
-app.get('/allFilesWithData', (req,res) => {
+/* app.get('/allFilesWithData', (req,res) => {
 	allFiles.displayData('./filesystem')
 	.then(response => {
         	res.send(response);
 	})
 
-})
+}) */
 
 app.post('/getFile', function(req, res) {
     filesystem.getFile(req.body.file).then(response => {
