@@ -2,6 +2,8 @@ var express = require('express')
 // let database = require('./database');
 var cors = require('cors')
 
+import graphqlHTTP from 'express-graphql'
+import schema from './schema'
 let gitcommit = require('./git-add-and-commit');
 let allFiles = require('./allFilesData');
 
@@ -17,6 +19,11 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json())
 app.use(cors({'origin': '*'}))
 
+/* GraphQL set */
+app.use('/graphql', graphqlHTTP({
+  schema: schema,
+  graphiql: true,
+}));
 
 app.get('/', (req, res) => {
         res.send("Mandi Api endpoint")
