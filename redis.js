@@ -21,6 +21,7 @@ function getAllFiles() {
   });
 }
 
+// Removing the file from the list
 function removeFromList(filename) {
   client.srem(['files', filename], (err, reply) => {
     console.log(reply);

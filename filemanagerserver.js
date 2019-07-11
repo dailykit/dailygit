@@ -12,7 +12,7 @@ const allFiles = require('./allFilesData');
 const filesystem = require('./filesystem');
 const gitCommits = require('./git-commit-log');
 const gitStatus = require('./git-status');
-const redis = require('./redis').default;
+const redis = require('./redis');
 
 // let test = require('./test')
 // let folder  = require("../filesystem")
