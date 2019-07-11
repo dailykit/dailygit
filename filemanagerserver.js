@@ -12,7 +12,7 @@ const allFiles = require('./allFilesData');
 const filesystem = require('./filesystem');
 const gitCommits = require('./git-commit-log');
 const gitStatus = require('./git-status');
-const redis = require('./redis');
+const editorFiles = require('./editorfiles.js');
 
 // let test = require('./test')
 // let folder  = require("../filesystem")
@@ -113,19 +113,19 @@ app.post('/createNewFile', (req, res) => {
 });
 
 app.post('/addFileToEditor', (req, res) => {
-  redis.addToList(req.body.file).then((data) => {
+  editorFiles.addToList(req.body.file).then((data) => {
     res.send(data);
   });
 });
 
 app.post('/getEditorFiles', (req, res) => {
-  redis.getAllFiles().then((data) => {
+  editorFiles.getAllFiles().then((data) => {
     res.send(data);
   });
 });
 
 app.post('/removeFileFromEditor', (req, res) => {
-  redis.removeFromList(req.body.file).then((data) => {
+  editorFiles.removeFromList(req.body.file).then((data) => {
     res.send(data);
   });
 });
