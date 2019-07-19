@@ -8,23 +8,34 @@ client.on('error', (err) => {
 });
 
 function addToList(filename) {
-  // adding key to list of files
-  client.sadd(['files', filename], (err, reply) => {
-    console.log(reply);
+  return new Promise((resolve, reject) => {
+    // adding key to list of files
+    client.sadd(['files', filename], (err, reply) => {
+      console.log(reply);
+      resolve(reply);
+    });
   });
 }
 
 function getAllFiles() {
-  // Getting all the files in the list
-  client.smembers('files', (err, reply) => {
-    console.log(reply);
+  return new Promise((resolve, reject) => {
+    // Getting all the files in the list
+    client.smembers('files', (err, reply) => {
+      console.log(reply);
+      resolve(reply);
+      client.quit();
+    });
   });
 }
 
 // Removing the file from the list
 function removeFromList(filename) {
-  client.srem(['files', filename], (err, reply) => {
-    console.log(reply);
+  return new Promise((resolve, reject) => {
+    client.srem(['files', filename], (err, reply) => {
+      console.log(reply);
+      resolve(reply);
+      client.quit();
+    });
   });
 }
 

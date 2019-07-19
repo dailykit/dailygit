@@ -1,5 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import graphqlHTTP from 'express-graphql';
+import { emitKeypressEvents } from 'readline';
 import schema from './schema';
 
 const express = require('express');
@@ -18,11 +19,11 @@ const editorFiles = require('./editorfiles.js');
 // let folder  = require("../filesystem")
 const app = express();
 const port = 3000;
-// eslint-disable-next-line import/no-extraneous-dependencies
-// eslint-disable-next-line import/order
-// eslint-disable-next-line import/no-extraneous-dependencies
-// eslint-disable-next-line import/order
+
 const bodyParser = require('body-parser');
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
+
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -35,7 +36,7 @@ app.use('/graphql', graphqlHTTP({
 }));
 
 app.get('/', (req, res) => {
-  res.send('Mandi Api endpoint');
+  res.send('Welcome to File Manager Server API');
 });
 
 app.get('/getFile', (req, res) => {
@@ -114,11 +115,18 @@ app.post('/createNewFile', (req, res) => {
 
 app.post('/addFileToEditor', (req, res) => {
   editorFiles.addToList(req.body.file).then((data) => {
-    res.send(data);
+    // res.send(data);
+    res.send({ status: 'File is added' });
   });
+
+  // io.on('connect', (socket) => {
+  // console.log('Connected!');
+  // const socket = io.connect('http://localhost:3000');
+  io.emit('OpenedFiles', 'Server', req.body.file);
+  // });
 });
 
-app.post('/getEditorFiles', (req, res) => {
+app.get('/getEditorFiles', (req, res) => {
   editorFiles.getAllFiles().then((data) => {
     res.send(data);
   });
@@ -130,4 +138,9 @@ app.post('/removeFileFromEditor', (req, res) => {
   });
 });
 
-app.listen(port, () => { console.log('App is running on port 3000'); });
+// app.listen(port, () => { console.log('App is running on port 3000'); });
+
+
+http.listen(port, () => {
+  console.log('listening on *:3000');
+});
