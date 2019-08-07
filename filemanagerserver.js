@@ -7,12 +7,12 @@ const express = require('express');
 // let database = require('./database');
 const cors = require('cors');
 
-const gitcommit = require('./git-add-and-commit');
+const gitcommit = require('./git-modification-code/git-add-and-commit');
 const allFiles = require('./allFilesData');
 
 const filesystem = require('./filesystem');
-const gitCommits = require('./git-commit-log');
-const gitStatus = require('./git-status');
+const gitCommits = require('./git-modification-code/git-commit-log');
+const gitStatus = require('./git-modification-code/git-status');
 const editorFiles = require('./editorfiles.js');
 
 // let test = require('./test')

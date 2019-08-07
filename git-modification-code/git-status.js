@@ -4,7 +4,7 @@ var nodegit = require("nodegit");
 
 function gitStatus () {
 return new Promise((resolve, reject) => {
-nodegit.Repository.open('./filesystem')
+nodegit.Repository.open('../filesystem')
   .then(function(repo) {
     repo.getStatus().then(function(statuses) {
       function statusToText(status) {

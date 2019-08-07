@@ -19,7 +19,7 @@ for(let i=2; i<filepathArray.length-1; i++) {
 
 let fileName = filepathArray[filepathArray.length-1]
 
-nodegit.Repository.open('./filesystem/')
+nodegit.Repository.open('../filesystem/')
 .then(function(repoResult) {
   repo = repoResult;
 })

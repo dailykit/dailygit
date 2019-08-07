@@ -3,7 +3,7 @@ var Promise = require('promise');
 
 function getCommitLog() {
   return new Promise((resolve, reject) => {
-    nodegit.Repository.open('./filesystem').then(function (repo) {
+    nodegit.Repository.open('../filesystem').then(function (repo) {
       /* Get the current branch. */
       return repo.getCurrentBranch().then(function (ref) {
         console.log("On " + ref.shorthand() + " (" + ref.target() + ")");
