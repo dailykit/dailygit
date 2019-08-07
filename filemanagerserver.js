@@ -138,6 +138,12 @@ app.post('/removeFileFromEditor', (req, res) => {
   });
 });
 
+app.get('/allRecipes', (req, res) => {
+  allFiles.displayData('./filesystem/Recipes').then((data) => {
+    res.send(data);
+  })
+})
+
 // app.listen(port, () => { console.log('App is running on port 3000'); });
 
 
