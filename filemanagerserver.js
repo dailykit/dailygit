@@ -6,8 +6,7 @@ import http from 'http'
 import bodyParser from 'body-parser'
 
 // Import Schema
-import typeDefs from './schema/typeDefs/index'
-import resolvers from './schema/resolvers/index'
+import { schema } from './schema/schema'
 
 // Import functions
 import gitcommit from './git-modification-code/git-add-and-commit'
@@ -21,8 +20,7 @@ import editorFiles from './editorfiles.js'
 const PORT = 3000
 
 const apolloserver = new ApolloServer({
-	typeDefs,
-	resolvers,
+	schema,
 	playground: {
 		endpoint: `http://localhost:${PORT}/graphql`,
 		settings: {
