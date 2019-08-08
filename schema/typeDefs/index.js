@@ -7,9 +7,16 @@ const typeDefs = gql`
 		type: String
 		children: [Content]
 	}
+	type Folder {
+		name: String
+		path: String
+		type: String
+		children: [Folder]
+	}
 	type Query {
 		hello: String
 		content: Content
+		folders: Folder
 	}
 `
 
