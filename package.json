@@ -40,7 +40,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "build-server": "babel -d ./build ./ -s"
   },
   "author": "",
   "license": "ISC",

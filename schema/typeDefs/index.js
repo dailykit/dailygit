@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-express'
+const { gql } = require('apollo-server-express')
 
 const typeDefs = gql`
 	type Content {
@@ -21,4 +21,4 @@ const typeDefs = gql`
 	}
 `
 
-export default typeDefs
+module.exports = typeDefs

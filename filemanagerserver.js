@@ -1,4 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
 const { ApolloServer } = require('apollo-server-express')
 const express = require('express')
 const cors = require('cors')
@@ -6,7 +5,7 @@ const http = require('http')
 const bodyParser = require('body-parser')
 
 // Import Schema
-const { schema } = require('./schema/schema')
+const schema = require('./schema/schema')
 
 // Import functions
 const gitcommit = require('./git-modification-code/git-add-and-commit')

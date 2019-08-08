@@ -1,6 +1,6 @@
-import { gql } from 'apollo-server-express'
+const { gql } = require('apollo-server-express')
 
-import filesystem from '../../filesystem'
+const filesystem = require('../../filesystem')
 
 const resolvers = {
 	Query: {
@@ -34,4 +34,4 @@ const resolvers = {
 	},
 }
 
-export default resolvers
+module.exports = resolvers
