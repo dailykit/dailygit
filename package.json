@@ -34,15 +34,16 @@
     "@babel/register": "^7.4.4",
     "babel-polyfill": "^6.26.0",
     "babel-preset-env": "^1.7.0",
+    "babel-preset-minify": "^0.5.0",
     "eslint": "^5.16.0",
     "eslint-config-airbnb-base": "^13.2.0",
     "eslint-plugin-import": "^2.18.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon --exec babel-node index.js",
+    "dev": "nodemon --exec babel-node src/index.js",
     "clean": "rm -rf build && mkdir build",
-    "build-server": "babel --ignore node_modules -d ./build ./ -s",
+    "build-server": "babel --ignore node_modules -d ./build ./src -s",
     "build": "npm run clean && npm run build-server"
   },
   "author": "",
