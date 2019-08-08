@@ -1,23 +1,23 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import { ApolloServer } from 'apollo-server-express'
-import express from 'express'
-import cors from 'cors'
-import http from 'http'
-import bodyParser from 'body-parser'
+const { ApolloServer } = require('apollo-server-express')
+const express = require('express')
+const cors = require('cors')
+const http = require('http')
+const bodyParser = require('body-parser')
 
 // Import Schema
-import { schema } from './schema/schema'
+const { schema } = require('./schema/schema')
 
 // Import functions
-import gitcommit from './git-modification-code/git-add-and-commit'
-import allFiles from './allFilesData'
+const gitcommit = require('./git-modification-code/git-add-and-commit')
+const allFiles = require('./allFilesData')
 
-import filesystem from './filesystem'
-import gitCommits from './git-modification-code/git-commit-log'
-import gitStatus from './git-modification-code/git-status'
-import editorFiles from './editorfiles.js'
+const filesystem = require('./filesystem')
+const gitCommits = require('./git-modification-code/git-commit-log')
+const gitStatus = require('./git-modification-code/git-status')
+const editorFiles = require('./editorfiles.js')
 
-const PORT = 3000
+const PORT = 4000
 
 const apolloserver = new ApolloServer({
 	schema,

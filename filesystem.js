@@ -28,10 +28,16 @@ async function displayData(testFolder) {
 					returnObject.type = 'folder'
 					return returnObject
 				} else {
+					const stats = fs.statSync(testFolder + '/' + file)
+					returnObject.size = stats.size
 					returnObject.type = 'file'
 					return returnObject
 				}
-			} else returnObject.type = 'file'
+			} else {
+				const stats = fs.statSync(testFolder + '/' + file)
+				returnObject.size = stats.size
+				returnObject.type = 'file'
+			}
 			return returnObject
 		})
 		return Promise.all(intermediateData).then(result => result)

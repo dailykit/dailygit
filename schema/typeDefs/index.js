@@ -5,6 +5,7 @@ const typeDefs = gql`
 		name: String
 		path: String
 		type: String
+		size: Int
 		children: [Content]
 	}
 	type Folder {
