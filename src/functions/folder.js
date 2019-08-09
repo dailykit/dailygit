@@ -1,4 +1,5 @@
 const fs = require('fs')
+const path = require('path')
 
 const getFoldersInDirectory = source =>
 	fs
@@ -6,41 +7,35 @@ const getFoldersInDirectory = source =>
 		.filter(dirent => dirent.isDirectory())
 		.map(dirent => dirent.name)
 
-const createFolder = async path => {
-	const folderName = (await path.split('/').slice(-1)) + ''
-	const parentDirectory =
-		(await path
-			.split('/')
-			.slice(0, -1)
-			.join('/')) + '/'
-	const foldersList = await getFoldersInDirectory(parentDirectory)
-	if (foldersList.includes(folderName)) {
+const createFolder = async url => {
+	if (fs.existsSync(url)) {
 		return 'Folder already exists!'
 	}
 	fs.mkdir(
-		path,
+		url,
 		{
 			recursive: true,
 		},
-		err => console.log(err)
+		err => {
+			if (err) {
+				console.log(err)
+			}
+		}
 	)
-	return 'Created!'
+	return 'Folder created successfuly!'
 }
-// fs.rmdir(path, err => new Error(err))
-const deleteFolder = async path => {
-	return new Promise((resolve, reject) => {
-		fs.rmdir(path, err => {
+
+const deleteFolder = url =>
+	new Promise((resolve, reject) => {
+		fs.rmdir(url, err => {
 			if (!err) {
 				resolve('Folder deleted succesfully!')
 			}
 			return reject(err)
 		})
 	})
-}
 
 module.exports = {
 	createFolder,
 	deleteFolder,
 }
-
-// rename if it exists assign default name

@@ -16,8 +16,6 @@ const gitCommits = require('./git-modification-code/git-commit-log')
 const gitStatus = require('./git-modification-code/git-status')
 const editorFiles = require('./editorfiles.js')
 
-require('./functions/folder')
-
 const PORT = 4000
 
 const apolloserver = new ApolloServer({
