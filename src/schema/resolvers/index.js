@@ -2,6 +2,8 @@ const { gql } = require('apollo-server-express')
 
 const filesystem = require('../../filesystem')
 
+const functions = require('../../functions/folder')
+
 const resolvers = {
 	Query: {
 		hello: () => 'world',
@@ -30,6 +32,19 @@ const resolvers = {
 			}
 			// console.log(data)
 			return appendData
+		},
+	},
+	Mutation: {
+		createFolder: async (_, args) => functions.createFolder(args.path),
+		deleteFolder: async (_, args) => {
+			try {
+				const response = await functions.deleteFolder(args.path)
+				return response
+			} catch (err) {
+				if (err.code === 'ENOENT') {
+					return "Folder doesn't exist!"
+				}
+			}
 		},
 	},
 }
