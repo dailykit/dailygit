@@ -16,12 +16,14 @@ const gitCommits = require('./git-modification-code/git-commit-log')
 const gitStatus = require('./git-modification-code/git-status')
 const editorFiles = require('./editorfiles.js')
 
-const PORT = 4000
+const PORT = process.env.PORT || 4000
 
 const apolloserver = new ApolloServer({
 	schema,
 	playground: {
-		endpoint: `http://localhost:${PORT}/graphql`,
+		endpoint: process.env.PORT
+			? `${process.env.port}/graphql`
+			: `http://localhost:${PORT}/graphql`,
 		settings: {
 			'editor.theme': 'dark',
 		},
