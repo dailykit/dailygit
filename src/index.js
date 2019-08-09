@@ -22,7 +22,7 @@ const apolloserver = new ApolloServer({
 	schema,
 	playground: {
 		endpoint: process.env.PORT
-			? `${process.env.port}/graphql`
+			? `${process.env.PORT}/graphql`
 			: `http://localhost:${PORT}/graphql`,
 		settings: {
 			'editor.theme': 'dark',
