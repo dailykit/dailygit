@@ -6,7 +6,6 @@ const functions = require('../../functions/folder')
 
 const resolvers = {
 	Query: {
-		hello: () => 'world',
 		content: async () => {
 			const data = await filesystem
 				.displayData('./filesystem')
