@@ -36,14 +36,8 @@ const resolvers = {
 	Mutation: {
 		createFolder: async (_, args) => functions.createFolder(args.path),
 		deleteFolder: async (_, args) => {
-			try {
-				const response = await functions.deleteFolder(args.path)
-				return response
-			} catch (err) {
-				if (err.code === 'ENOENT') {
-					return "Folder doesn't exist!"
-				}
-			}
+			const response = await functions.deleteFolder(args.path)
+			return 'Folder deleted succesfully!'
 		},
 	},
 }

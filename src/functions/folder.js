@@ -25,15 +25,29 @@ const createFolder = async url => {
 	return 'Folder created successfuly!'
 }
 
-const deleteFolder = url =>
-	new Promise((resolve, reject) => {
-		fs.rmdir(url, err => {
-			if (!err) {
-				resolve('Folder deleted succesfully!')
-			}
-			return reject(err)
-		})
-	})
+const deleteFolder = dirPath => {
+	if (!fs.existsSync(dirPath)) {
+		return "Folder doesn't exist!"
+	}
+
+	let list = fs.readdirSync(dirPath)
+	for (var i = 0; i < list.length; i++) {
+		var filename = path.join(dirPath, list[i])
+		console.log('filename', filename)
+		var stat = fs.statSync(filename)
+
+		if (filename == '.' || filename == '..') {
+			// do nothing for current and parent dir
+		} else if (stat.isDirectory()) {
+			deleteFolder(filename)
+		} else {
+			fs.unlinkSync(filename)
+		}
+	}
+	if (getFoldersInDirectory(dirPath).length === 0) {
+		fs.rmdirSync(dirPath)
+	}
+}
 
 module.exports = {
 	createFolder,
