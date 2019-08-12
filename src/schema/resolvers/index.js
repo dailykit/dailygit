@@ -42,12 +42,16 @@ const resolvers = {
 			}
 			return appendData
 		},
+		getFile: async (_, args) =>
+			await files
+				.getFile(args.path)
+				.then(success => success)
+				.catch(failure => console.log(failure.message)),
 	},
 	Mutation: {
 		createFolder: async (_, args) => folders.createFolder(args.path),
 		deleteFolder: async (_, args) => {
 			const response = await folders.deleteFolder(args.path)
-			console.log('TCL: response', response)
 			return 'Folder deleted succesfully!'
 		},
 		createFile: async (_, args) =>

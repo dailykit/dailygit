@@ -26,7 +26,27 @@ const deleteFile = givenPath => {
 	})
 }
 
+const getFile = givenPath => {
+	return new Promise((resolve, reject) => {
+		const stats = fs.statSync(givenPath)
+		const parse = path.parse(givenPath)
+		fs.readFile(givenPath, (err, data) => {
+			if (err) reject(err)
+			resolve({
+				name: parse.name,
+				ext: parse.ext,
+				path: givenPath,
+				size: stats.size,
+				createdAt: stats.birthtime,
+				type: 'file',
+				content: data.toString(),
+			})
+		})
+	})
+}
+
 module.exports = {
 	createFile,
 	deleteFile,
+	getFile,
 }

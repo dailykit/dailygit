@@ -32,12 +32,22 @@ const typeDefs = gql`
 		content: String
 		children: [ContentWithFilesData]
 	}
+	type File {
+		name: String
+		path: String
+		content: String
+		type: String
+		size: Int
+		ext: String
+		createdAt: String
+	}
 	type Query {
 		"Query to fetch all the nested folders/files"
 		content: Content
 		"Query to fetch all the nested folders"
 		folders: Folder
-		contentWithFilesData(path: String): ContentWithFilesData
+		contentWithFilesData(path: String!): ContentWithFilesData
+		getFile(path: String!): File
 	}
 `
 
