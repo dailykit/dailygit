@@ -1,7 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 
-const createNewFile = (givenPath, givenType) => {
+const createFile = (givenPath, givenType) => {
 	return new Promise((resolve, reject) => {
 		let newFilePath = '/' + givenPath.split('./')[1]
 
@@ -17,6 +17,16 @@ const createNewFile = (givenPath, givenType) => {
 	})
 }
 
+const deleteFile = givenPath => {
+	return new Promise((resolve, reject) => {
+		fs.unlink(givenPath, err => {
+			if (err) reject("File doesn't exist!")
+			resolve('File deleted succesfully')
+		})
+	})
+}
+
 module.exports = {
-	createNewFile,
+	createFile,
+	deleteFile,
 }

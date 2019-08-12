@@ -33,11 +33,17 @@ const resolvers = {
 		createFolder: async (_, args) => folders.createFolder(args.path),
 		deleteFolder: async (_, args) => {
 			const response = await folders.deleteFolder(args.path)
+			console.log('TCL: response', response)
 			return 'Folder deleted succesfully!'
 		},
 		createFile: async (_, args) =>
-			await files
-				.createNewFile(args.path, args.type)
+			files
+				.createFile(args.path, args.type)
+				.then(success => success)
+				.catch(failure => failure),
+		deleteFile: async (_, args) =>
+			files
+				.deleteFile(args.path)
 				.then(success => success)
 				.catch(failure => failure),
 	},
