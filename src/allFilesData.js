@@ -12,23 +12,25 @@ async function displayData(testFolder) {
 		let data = await readdir(testFolder) //, (err, files) => {
 		let intermediateData = data.map(async file => {
 			let returnObject = {}
-			returnObject.value = file
-			returnObject.id = testFolder + '/' + file
-			returnObject.data = await getFile(testFolder + '/' + file)
+			returnObject.name = file
+			returnObject.path = testFolder + '/' + file
+			if (fs.statSync(testFolder + '/' + file).isFile()) {
+				returnObject.content = await getFile(testFolder + '/' + file)
+			}
 			let filenamearray = file.split('')
 			if (filenamearray[0] !== '.' && file !== 'node_modules') {
 				if (fs.lstatSync(testFolder + '/' + file).isDirectory()) {
 					let functionResponse = await displayData(
 						testFolder + '/' + file
 					)
-					returnObject.data = functionResponse
+					returnObject.children = functionResponse
 					returnObject.type = 'folder'
 					return returnObject
 				} else {
-					returnObject.type = 'text'
+					returnObject.type = 'file'
 					return returnObject
 				}
-			} else returnObject.type = 'text'
+			} else returnObject.type = 'file'
 			return returnObject
 		})
 		return Promise.all(intermediateData).then(result => result)

@@ -2,6 +2,8 @@ const filesystem = require('../../filesystem')
 const folders = require('../../functions/folder')
 const files = require('../../functions/file')
 
+const allFiles = require('../../allFilesData.js')
+
 const resolvers = {
 	Query: {
 		content: async () => {
@@ -19,6 +21,18 @@ const resolvers = {
 		folders: async () => {
 			const data = await filesystem
 				.displayFolders('./filesystem')
+				.then(response => response)
+			const appendData = await {
+				name: 'Folder',
+				path: './filesystem',
+				type: 'folder',
+				children: data,
+			}
+			return appendData
+		},
+		contentWithFilesData: async (_, args) => {
+			const data = await allFiles
+				.displayData(args.path)
 				.then(response => response)
 			const appendData = await {
 				name: 'Folder',
