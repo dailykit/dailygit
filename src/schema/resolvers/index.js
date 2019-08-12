@@ -1,8 +1,6 @@
-const { gql } = require('apollo-server-express')
-
 const filesystem = require('../../filesystem')
-
-const functions = require('../../functions/folder')
+const folders = require('../../functions/folder')
+const files = require('../../functions/file')
 
 const resolvers = {
 	Query: {
@@ -16,7 +14,6 @@ const resolvers = {
 				type: 'folder',
 				children: data,
 			}
-			// console.log(appendData)
 			return appendData
 		},
 		folders: async () => {
@@ -29,16 +26,20 @@ const resolvers = {
 				type: 'folder',
 				children: data,
 			}
-			// console.log(data)
 			return appendData
 		},
 	},
 	Mutation: {
-		createFolder: async (_, args) => functions.createFolder(args.path),
+		createFolder: async (_, args) => folders.createFolder(args.path),
 		deleteFolder: async (_, args) => {
-			const response = await functions.deleteFolder(args.path)
+			const response = await folders.deleteFolder(args.path)
 			return 'Folder deleted succesfully!'
 		},
+		createFile: async (_, args) =>
+			await files
+				.createNewFile(args.path, args.type)
+				.then(success => success)
+				.catch(failure => failure),
 	},
 }
 

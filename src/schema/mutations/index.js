@@ -7,6 +7,8 @@ const mutations = gql`
 		createFolder(path: String): String
 		"Mutation to delete a folder"
 		deleteFolder(path: String): String
+		"Mutation to create a file"
+		createFile(path: String, type: String): String
 	}
 `
 
