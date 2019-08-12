@@ -21,7 +21,11 @@ const PORT = 4000
 const apolloserver = new ApolloServer({
 	schema,
 	playground: {
-		endpoint: `http://localhost:${PORT}/graphql`,
+		endpoint: `${
+			process.env.NODE_ENV === 'production'
+				? 'http://ec2-13-59-178-203.us-east-2.compute.amazonaws.com:'
+				: 'http://localhost:'
+		}${PORT}/graphql`,
 		settings: {
 			'editor.theme': 'dark',
 		},
