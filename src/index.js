@@ -29,6 +29,7 @@ const apolloserver = new ApolloServer({
 			'editor.theme': 'dark',
 		},
 	},
+	introspection: true,
 })
 
 const app = express()
