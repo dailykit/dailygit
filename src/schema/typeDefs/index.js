@@ -46,7 +46,7 @@ const typeDefs = gql`
 		content: Content
 		"Query to fetch all the nested folders"
 		folders: Folder
-		contentWithFilesData(path: String!): ContentWithFilesData
+		contentWithFilesData(path: String): ContentWithFilesData
 		getFile(path: String!): File
 	}
 `

@@ -7,7 +7,7 @@ const readdir = util.promisify(fs.readdir, (resolve, reject) => {
 	resolve('ok')
 })
 
-async function displayData(testFolder) {
+async function displayData(testFolder = './filesystem') {
 	try {
 		let data = await readdir(testFolder) //, (err, files) => {
 		let intermediateData = data.map(async file => {
