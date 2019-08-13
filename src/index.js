@@ -9,9 +9,7 @@ const schema = require('./schema/schema')
 
 // Import functions
 const gitcommit = require('./git-modification-code/git-add-and-commit')
-const allFiles = require('./allFilesData')
 
-const filesystem = require('./filesystem')
 const gitCommits = require('./git-modification-code/git-commit-log')
 const gitStatus = require('./git-modification-code/git-status')
 const editorFiles = require('./editorfiles.js')
@@ -46,16 +44,6 @@ app.get('/', (req, res) => {
 	res.send('Welcome to File Manager Server API')
 })
 
-app.get('/getFile', (req, res) => {
-	filesystem.getFile(req.query.file).then(response => {
-		res.setHeader('Access-Control-Allow-Origin', '*')
-		res.setHeader('Access-Control-Allow-Headers', '*')
-		const returndata = {
-			response,
-		}
-		res.send(returndata)
-	})
-})
 app.post('/commitFile', (req, res) => {
 	const { filePath } = req.body
 	const { commitMessage } = req.body
@@ -75,18 +63,6 @@ app.get('/getGitStatus', (req, res) => {
 	})
 })
 
-app.get('/loadfiles', (req, res) => {
-	filesystem.displayData('./filesystem').then(response => {
-		res.send(response)
-	})
-})
-
-app.get('/allFilesWithData', (req, res) => {
-	allFiles.displayData('./filesystem').then(response => {
-		res.send(response)
-	})
-})
-
 app.post('/getFile', (req, res) => {
 	filesystem.getFile(req.body.file).then(response => {
 		res.setHeader('Access-Control-Allow-Origin', '*')
@@ -98,23 +74,6 @@ app.post('/getFile', (req, res) => {
 			response,
 		}
 		res.send(returndata)
-	})
-})
-
-app.post('/updateFile', (req, res) => {
-	filesystem.updateFile(req.body).then(response => {
-		res.setHeader('Access-Control-Allow-Origin', '*')
-		res.setHeader('Access-Control-Allow-Headers', '*')
-
-		res.send(response)
-	})
-})
-
-app.post('/createNewFile', (req, res) => {
-	filesystem.createNewFile(req.body).then(response => {
-		res.setHeader('Access-Control-Allow-Origin', '*')
-		res.setHeader('Access-Control-Allow-Headers', '*')
-		res.send(response)
 	})
 })
 
@@ -139,12 +98,6 @@ app.get('/getEditorFiles', (req, res) => {
 
 app.post('/removeFileFromEditor', (req, res) => {
 	editorFiles.removeFromList(req.body.file).then(data => {
-		res.send(data)
-	})
-})
-
-app.get('/allRecipes', (req, res) => {
-	allFiles.displayData('./filesystem/Recipes').then(data => {
 		res.send(data)
 	})
 })

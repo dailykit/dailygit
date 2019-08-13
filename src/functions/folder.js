@@ -1,11 +1,48 @@
 const fs = require('fs')
 const path = require('path')
 
-const getFoldersInDirectory = source =>
-	fs
-		.readdirSync(source, { withFileTypes: true })
-		.filter(dirent => dirent.isDirectory())
-		.map(dirent => dirent.name)
+const files = require('./file')
+
+const getFolder = async (testFolder = './filesystem') => {
+	try {
+		let data = await fs.readdirSync(testFolder) //, (err, files) => {
+		let intermediateData = data.map(async file => {
+			let returnObject = {}
+			returnObject.name = file
+			returnObject.path = testFolder + '/' + file
+			if (fs.statSync(testFolder + '/' + file).isFile()) {
+				const fileData = await files.getFile(testFolder + '/' + file)
+				returnObject.content = fileData.content
+			}
+			let filenamearray = file.split('')
+			if (filenamearray[0] !== '.' && file !== 'node_modules') {
+				if (fs.lstatSync(testFolder + '/' + file).isDirectory()) {
+					let functionResponse = await getFolder(
+						testFolder + '/' + file
+					)
+					returnObject.children = functionResponse
+					returnObject.type = 'folder'
+					return returnObject
+				} else {
+					const stats = fs.statSync(testFolder + '/' + file)
+					returnObject.size = stats.size
+					returnObject.createdAt = stats.birthtime
+					returnObject.type = 'file'
+					return returnObject
+				}
+			} else {
+				const stats = fs.statSync(testFolder + '/' + file)
+				returnObject.size = stats.size
+				returnObject.createdAt = stats.birthtime
+				returnObject.type = 'file'
+			}
+			return returnObject
+		})
+		return Promise.all(intermediateData).then(result => result)
+	} catch (e) {
+		console.log(e)
+	}
+}
 
 const createFolder = async url => {
 	if (fs.existsSync(url)) {
@@ -44,7 +81,7 @@ const deleteFolder = dirPath => {
 			fs.unlinkSync(filename)
 		}
 	}
-	if (getFoldersInDirectory(dirPath).length === 0) {
+	if (list.length === 0) {
 		fs.rmdirSync(dirPath)
 	}
 }
@@ -52,4 +89,5 @@ const deleteFolder = dirPath => {
 module.exports = {
 	createFolder,
 	deleteFolder,
+	getFolder,
 }
