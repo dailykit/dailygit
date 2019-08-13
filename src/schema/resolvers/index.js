@@ -64,6 +64,11 @@ const resolvers = {
 				.deleteFile(args.path)
 				.then(success => success)
 				.catch(failure => failure),
+		updateFile: async (_, args) =>
+			files
+				.updateFile(args.path, args.data)
+				.then(sucess => sucess)
+				.catch(failure => "File doesn't exists!"),
 	},
 }
 

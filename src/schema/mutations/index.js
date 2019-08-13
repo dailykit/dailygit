@@ -11,6 +11,8 @@ const mutations = gql`
 		createFile(path: String, type: String): String
 		"Mutation to delete a file"
 		deleteFile(path: String): String
+		"Mutation to update the file"
+		updateFile(path: String!, data: String): String
 	}
 `
 

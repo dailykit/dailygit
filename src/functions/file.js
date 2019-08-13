@@ -45,8 +45,24 @@ const getFile = givenPath => {
 	})
 }
 
+const updateFile = async (givenPath, data) => {
+	const file = await getFile(givenPath).then(data => data)
+	if (file.path === givenPath) {
+		return new Promise((resolve, reject) => {
+			fs.writeFile(givenPath, data, function(err) {
+				if (err) {
+					return reject(err)
+				}
+			})
+			resolve('File has been updated successfully!')
+		})
+	}
+	reject("File doesn't exists!")
+}
+
 module.exports = {
 	createFile,
 	deleteFile,
 	getFile,
+	updateFile,
 }
