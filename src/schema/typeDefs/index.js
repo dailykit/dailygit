@@ -22,6 +22,8 @@ const typeDefs = gql`
 		name: String
 		"Relative path of the folder"
 		path: String
+		"Type of item"
+		type: String
 		"Return list of nested folders"
 		children: [Folder]
 	}
