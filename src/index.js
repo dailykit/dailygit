@@ -30,6 +30,13 @@ const apolloserver = new ApolloServer({
 	},
 	introspection: true,
 	validationRules: [depthLimit(5)],
+	formatError: err => {
+		if (err.extensions.code === 'GRAPHQL_VALIDATION_FAILED') {
+			return new Error('The query has exceeded maximum depth!')
+		}
+		return err
+	},
+	debug: false,
 })
 
 const app = express()
