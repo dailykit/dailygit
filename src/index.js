@@ -3,6 +3,7 @@ const express = require('express')
 const cors = require('cors')
 const http = require('http')
 const bodyParser = require('body-parser')
+const depthLimit = require('graphql-depth-limit')
 
 // Import Schema
 const schema = require('./schema/schema')
@@ -28,6 +29,7 @@ const apolloserver = new ApolloServer({
 		},
 	},
 	introspection: true,
+	validationRules: [depthLimit(5)],
 })
 
 const app = express()
