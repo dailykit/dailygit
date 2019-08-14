@@ -3,42 +3,64 @@ const path = require('path')
 
 const files = require('./file')
 
-const getFolder = async (testFolder = './filesystem') => {
+const getNestedFolders = async url => {
+	let content = await fs.readdirSync(url)
+	let folders = content.filter(item =>
+		fs.statSync(`${url}/${item}`).isDirectory()
+	)
+	let result = folders.map(async folder => {
+		if (fs.statSync(`${url}/${folder}`).isDirectory()) {
+			let parentFolder = {}
+			parentFolder.name = folder
+			parentFolder.path = `${url}/${folder}`
+			parentFolder.type = 'folder'
+			let children = await getNestedFolders(`${url}/${folder}`)
+			parentFolder.children = children
+			return parentFolder
+		}
+	})
+	return Promise.all(result).then(response => response)
+}
+
+const getFolder = async (url = './filesystem') => {
 	try {
-		let data = await fs.readdirSync(testFolder) //, (err, files) => {
+		let data = await fs.readdirSync(url)
 		let intermediateData = data.map(async file => {
 			let returnObject = {}
 			returnObject.name = file
-			returnObject.path = testFolder + '/' + file
-			if (fs.statSync(testFolder + '/' + file).isFile()) {
-				const fileData = await files.getFile(testFolder + '/' + file)
+			returnObject.path = url + '/' + file
+			if (fs.statSync(url + '/' + file).isFile()) {
+				const fileData = await files.getFile(url + '/' + file)
 				returnObject.content = fileData.content
 			}
 			let filenamearray = file.split('')
 			if (filenamearray[0] !== '.' && file !== 'node_modules') {
-				if (fs.lstatSync(testFolder + '/' + file).isDirectory()) {
-					let functionResponse = await getFolder(
-						testFolder + '/' + file
-					)
+				if (fs.lstatSync(url + '/' + file).isDirectory()) {
+					let functionResponse = await getFolder(url + '/' + file)
 					returnObject.children = functionResponse
 					returnObject.type = 'folder'
 					return returnObject
 				} else {
-					const stats = fs.statSync(testFolder + '/' + file)
+					const stats = fs.statSync(url + '/' + file)
 					returnObject.size = stats.size
 					returnObject.createdAt = stats.birthtime
 					returnObject.type = 'file'
 					return returnObject
 				}
 			} else {
-				const stats = fs.statSync(testFolder + '/' + file)
+				const stats = fs.statSync(url + '/' + file)
 				returnObject.size = stats.size
 				returnObject.createdAt = stats.birthtime
 				returnObject.type = 'file'
 			}
 			return returnObject
 		})
-		return Promise.all(intermediateData).then(result => result)
+		return Promise.all(intermediateData).then(result => ({
+			name: path.parse(url).name,
+			path: url,
+			type: 'folder',
+			children: result,
+		}))
 	} catch (e) {
 		console.log(e)
 	}
@@ -90,4 +112,5 @@ module.exports = {
 	createFolder,
 	deleteFolder,
 	getFolder,
+	getNestedFolders,
 }

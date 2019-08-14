@@ -1,24 +1,24 @@
 const { gql } = require('apollo-server-express')
 
 const typeDefs = gql`
-	union FolderOrFile = Folder | File
 	type Folder {
 		name: String
 		path: String
 		type: String
-		children: [FolderOrFile]
+		children: [Folder]
 	}
 	type File {
 		name: String
 		path: String
-		content: String
 		type: String
+		content: String
 		size: Int
 		ext: String
 		createdAt: String
 	}
 	type Query {
-		folders: Folder
+		getFolder(path: String): Folder
+		getNestedFolders(path: String): Folder
 		getFile(path: String!): File
 	}
 `

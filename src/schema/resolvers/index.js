@@ -1,26 +1,24 @@
+const path = require('path')
+
 const folders = require('../../functions/folder')
 const files = require('../../functions/file')
 
 const resolvers = {
-	FolderOrFile: {
-		__resolveType(obj) {
-			if (obj.type === 'folder') return 'Folder'
-			if (obj.type === 'file') return 'File'
-		},
-	},
 	Query: {
-		folders: async () => {
+		getNestedFolders: async (_, args) => {
 			const data = await folders
-				.getFolder('./filesystem')
+				.getNestedFolders(args.path)
 				.then(response => response)
-			const appendData = await {
-				name: 'Folder',
-				path: './filesystem',
+			const withParent = {
+				name: path.parse(args.path).name,
 				type: 'folder',
+				path: args.path,
 				children: data,
 			}
-			return appendData
+			return withParent
 		},
+		getFolder: async (_, args) =>
+			await folders.getFolder(args.path).then(response => response),
 		getFile: async (_, args) =>
 			await files
 				.getFile(args.path)
