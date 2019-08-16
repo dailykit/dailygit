@@ -35,10 +35,10 @@ const resolvers = {
 			}
 			return new Error('ENOENT')
 		},
-		getNestedFoldersWithFiles: async (_, args) => {
+		getFolderWithFiles: async (_, args) => {
 			if (fs.existsSync(args.path)) {
 				const data = await folders
-					.getNestedFoldersWithFiles(args.path)
+					.getFolderWithFiles(args.path)
 					.then(response => response)
 				const folderSize = await getFolderSize(args.path)
 					.map(file => fs.readFileSync(file))
@@ -55,33 +55,55 @@ const resolvers = {
 			}
 			return new Error('ENOENT')
 		},
-		getFile: async (_, args) =>
-			await files
-				.getFile(args.path)
-				.then(success => success)
-				.catch(failure => console.log(failure.message)),
+		getFile: async (_, args) => {
+			if (fs.existsSync(args.path)) {
+				return files
+					.getFile(args.path)
+					.then(success => success)
+					.catch(failure => new Error(failure))
+			}
+			return new Error('ENOENT')
+		},
 	},
 	Mutation: {
-		createFolder: async (_, args) => folders.createFolder(args.path),
-		deleteFolder: async (_, args) => {
-			const response = await folders.deleteFolder(args.path)
-			return 'Folder deleted succesfully!'
+		createFolder: (_, args) => {
+			if (fs.existsSync(args.path)) {
+				return 'Folder already exists!'
+			} else {
+				return folders.createFolder(args.path)
+			}
 		},
-		createFile: async (_, args) =>
-			files
-				.createFile(args.path, args.type)
-				.then(success => success)
-				.catch(failure => failure),
-		deleteFile: async (_, args) =>
-			files
-				.deleteFile(args.path)
-				.then(success => success)
-				.catch(failure => failure),
-		updateFile: async (_, args) =>
-			files
-				.updateFile(args.path, args.data)
-				.then(sucess => sucess)
-				.catch(failure => "File doesn't exists!"),
+		deleteFolder: async (_, args) => {
+			if (fs.existsSync(args.path)) {
+				folders.deleteFolder(args.path)
+				return 'Folder deleted successfully!'
+			}
+			return new Error('ENOENT')
+		},
+		createFile: async (_, args) => {
+			if (fs.existsSync(args.path)) {
+				return 'File already exists!'
+			}
+			return files.createFile(args.path, args.type)
+		},
+		deleteFile: async (_, args) => {
+			if (fs.existsSync(args.path)) {
+				files
+					.deleteFile(args.path)
+					.then(success => success)
+					.catch(failure => failure)
+			}
+			return new Error('ENOENT')
+		},
+		updateFile: async (_, args) => {
+			if (fs.existsSync(args.path)) {
+				return files
+					.updateFile(args.path, args.data)
+					.then(sucess => sucess)
+					.catch(failure => failure)
+			}
+			return new Error('ENOENT')
+		},
 	},
 }
 

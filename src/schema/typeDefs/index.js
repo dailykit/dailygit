@@ -28,7 +28,7 @@ const typeDefs = gql`
 		createdAt: String
 	}
 	type Query {
-		getNestedFoldersWithFiles(path: String): FolderWithFiles
+		getFolderWithFiles(path: String): FolderWithFiles
 		getNestedFolders(path: String): Folder
 		getFile(path: String!): File
 	}

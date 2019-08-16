@@ -9,73 +9,60 @@ const getNestedFolders = async url => {
 	let folders = content.filter(item =>
 		fs.statSync(`${url}/${item}`).isDirectory()
 	)
-	let result = folders.map(async folder => {
-		if (fs.statSync(`${url}/${folder}`).isDirectory()) {
-			const stats = fs.statSync(`${url}/${folder}`)
-			let parentFolder = {}
-			parentFolder.name = folder
-			parentFolder.path = `${url}/${folder}`
-			parentFolder.type = 'folder'
-			parentFolder.createdAt = stats.birthtime
+	let nestedData = folders.map(async folder => {
+		const stats = fs.statSync(`${url}/${folder}`)
+		if (stats.isDirectory()) {
+			let node = {}
+			node.name = folder
+			node.path = `${url}/${folder}`
+			node.type = 'folder'
+			node.createdAt = stats.birthtime
 			const folderSize = await getFolderSize(`${url}/${folder}`)
 				.map(file => fs.readFileSync(file))
 				.join('\n')
-			parentFolder.size = folderSize.length
+			node.size = folderSize.length
 			let children = await getNestedFolders(`${url}/${folder}`)
-			parentFolder.children = children
-			return parentFolder
+			node.children = children
+			return node
 		}
 	})
-	return Promise.all(result).then(response => response)
+	return Promise.all(nestedData).then(response => response)
 }
 
-const getNestedFoldersWithFiles = async (url = './filesystem') => {
+const getFolderWithFiles = async (url = './filesystem') => {
 	try {
 		let data = await fs.readdirSync(url)
-		let intermediateData = data.map(async file => {
-			const stats = fs.statSync(`${url}/${file}`)
-			let returnObject = {}
-			returnObject.name = file
-			returnObject.path = `${url}/${file}`
-			returnObject.createdAt = stats.birthtime
-			if (fs.statSync(`${url}/${file}`).isFile()) {
-				const fileData = await files.getFile(`${url}/${file}`)
-				returnObject.content = fileData.content
+		let nestedData = data.map(async item => {
+			const stats = fs.statSync(`${url}/${item}`)
+			let node = {}
+			node.name = item
+			node.path = `${url}/${item}`
+			node.createdAt = stats.birthtime
+			if (stats.isFile()) {
+				const fileData = await files.getFile(`${url}/${item}`)
+				node.content = fileData.content
+				node.size = stats.size
+				node.type = 'file'
+			} else if (stats.isDirectory()) {
+				let functionResponse = await getFolderWithFiles(
+					`${url}/${item}`
+				)
+				node.children = functionResponse
+				node.type = 'folder'
+				const folderSize = await getFolderSize(`${url}/${item}`)
+					.map(file => fs.readFileSync(file))
+					.join('\n')
+				node.size = folderSize.length
 			}
-			let filenamearray = file.split('')
-			if (filenamearray[0] !== '.' && file !== 'node_modules') {
-				if (fs.lstatSync(`${url}/${file}`).isDirectory()) {
-					let functionResponse = await getNestedFoldersWithFiles(
-						`${url}/${file}`
-					)
-					returnObject.children = functionResponse
-					returnObject.type = 'folder'
-					const folderSize = await getFolderSize(`${url}/${file}`)
-						.map(file => fs.readFileSync(file))
-						.join('\n')
-					returnObject.size = folderSize.length
-					return returnObject
-				} else {
-					returnObject.size = stats.size
-					returnObject.type = 'file'
-					return returnObject
-				}
-			} else {
-				returnObject.size = stats.size
-				returnObject.type = 'file'
-			}
-			return returnObject
+			return node
 		})
-		return Promise.all(intermediateData).then(result => result)
+		return Promise.all(nestedData).then(result => result)
 	} catch (e) {
 		console.log(e)
 	}
 }
 
 const createFolder = async url => {
-	if (fs.existsSync(url)) {
-		return 'Folder already exists!'
-	}
 	fs.mkdir(
 		url,
 		{
@@ -91,14 +78,9 @@ const createFolder = async url => {
 }
 
 const deleteFolder = dirPath => {
-	if (!fs.existsSync(dirPath)) {
-		return "Folder doesn't exist!"
-	}
-
 	let list = fs.readdirSync(dirPath)
 	for (var i = 0; i < list.length; i++) {
 		var filename = path.join(dirPath, list[i])
-		console.log('filename', filename)
 		var stat = fs.statSync(filename)
 
 		if (filename == '.' || filename == '..') {
@@ -118,5 +100,5 @@ module.exports = {
 	createFolder,
 	deleteFolder,
 	getNestedFolders,
-	getNestedFoldersWithFiles,
+	getFolderWithFiles,
 }

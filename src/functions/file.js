@@ -2,19 +2,16 @@ const fs = require('fs')
 const path = require('path')
 
 const createFile = (givenPath, givenType) => {
-	return new Promise((resolve, reject) => {
+	try {
 		let newFilePath = '/' + givenPath.split('./')[1]
-
 		var fullPath = process.cwd()
 		let sourceFilePath = `${fullPath}\\src\\templates\\${givenType}.json`
 		let destinationFilePath = fullPath + newFilePath.split('/').join('\\')
-		fs.copyFile(sourceFilePath, destinationFilePath, err => {
-			if (!err) {
-				resolve('File successfully created!')
-			}
-			reject('File could not be created')
-		})
-	})
+		fs.copyFileSync(sourceFilePath, destinationFilePath)
+		return 'File created successfully!'
+	} catch (err) {
+		return new Error(err)
+	}
 }
 
 const deleteFile = givenPath => {
@@ -34,7 +31,6 @@ const getFile = givenPath => {
 			if (err) reject(err)
 			resolve({
 				name: parse.name,
-				ext: parse.ext,
 				path: givenPath,
 				size: stats.size,
 				createdAt: stats.birthtime,
@@ -46,18 +42,14 @@ const getFile = givenPath => {
 }
 
 const updateFile = async (givenPath, data) => {
-	const file = await getFile(givenPath).then(data => data)
-	if (file.path === givenPath) {
-		return new Promise((resolve, reject) => {
-			fs.writeFile(givenPath, data, function(err) {
-				if (err) {
-					return reject(err)
-				}
-			})
-			resolve('File has been updated successfully!')
+	return new Promise((resolve, reject) => {
+		fs.writeFile(givenPath, data, function(err) {
+			if (err) {
+				return reject(err)
+			}
 		})
-	}
-	reject("File doesn't exists!")
+		resolve('File has been updated successfully!')
+	})
 }
 
 module.exports = {
