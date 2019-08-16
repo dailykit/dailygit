@@ -31,10 +31,9 @@ const apolloserver = new ApolloServer({
 	introspection: true,
 	validationRules: [depthLimit(5)],
 	formatError: err => {
-		if (err.extensions.code === 'GRAPHQL_VALIDATION_FAILED') {
-			return new Error('The query has exceeded maximum depth!')
-		}
-		return err
+		if (err.message.includes('ENOENT'))
+			return new Error('No such folder or file exists!')
+		return new Error(err)
 	},
 	debug: false,
 })
