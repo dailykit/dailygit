@@ -88,10 +88,7 @@ const resolvers = {
 		},
 		deleteFile: async (_, args) => {
 			if (fs.existsSync(args.path)) {
-				files
-					.deleteFile(args.path)
-					.then(success => success)
-					.catch(failure => failure)
+				files.deleteFile(args.path)
 			}
 			return new Error('ENOENT')
 		},
