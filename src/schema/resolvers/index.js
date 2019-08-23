@@ -80,6 +80,15 @@ const resolvers = {
 			}
 			return new Error('ENOENT')
 		},
+		renameFolder: async (_, args) => {
+			if (fs.existsSync(args.oldPath)) {
+				return folders
+					.renameFolder(args.oldPath, args.newPath)
+					.then(sucess => sucess)
+					.catch(failure => failure)
+			}
+			return new Error('ENOENT')
+		},
 		createFile: async (_, args) => {
 			if (fs.existsSync(args.path)) {
 				return 'File already exists!'

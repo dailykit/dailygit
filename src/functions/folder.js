@@ -96,9 +96,21 @@ const deleteFolder = dirPath => {
 	}
 }
 
+const renameFolder = async (oldPath, newPath) => {
+	return new Promise((resolve, reject) => {
+		fs.rename(oldPath, newPath, function(err) {
+			if (err) {
+				return reject(err)
+			}
+		})
+		resolve('Folder has been renamed successfully!')
+	})
+}
+
 module.exports = {
 	createFolder,
 	deleteFolder,
+	renameFolder,
 	getNestedFolders,
 	getFolderWithFiles,
 }
