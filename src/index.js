@@ -28,7 +28,7 @@ const apolloserver = new ApolloServer({
 			'editor.theme': 'dark',
 		},
 	},
-	introspection: false,
+	introspection: process.env.NODE_ENV === 'production' ? false : true,
 	validationRules: [depthLimit(5)],
 	formatError: err => {
 		if (err.message.includes('ENOENT'))
