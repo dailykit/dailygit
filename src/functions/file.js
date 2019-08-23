@@ -54,9 +54,21 @@ const updateFile = async (givenPath, data) => {
 	})
 }
 
+const renameFile = async (oldPath, newPath) => {
+	return new Promise((resolve, reject) => {
+		fs.rename(oldPath, newPath, function(err) {
+			if (err) {
+				return reject(err)
+			}
+		})
+		resolve('File has been renamed successfully!')
+	})
+}
+
 module.exports = {
 	createFile,
 	deleteFile,
 	getFile,
 	updateFile,
+	renameFile,
 }

@@ -13,6 +13,8 @@ const mutations = gql`
 		deleteFile(path: String): String
 		"Mutation to update the file"
 		updateFile(path: String!, data: String): String
+		"Mutation to rename a file"
+		renameFile(oldPath: String!, newPath: String!): String
 	}
 `
 
