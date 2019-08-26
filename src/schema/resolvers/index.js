@@ -4,6 +4,8 @@ const fs = require('fs')
 
 const folders = require('../../functions/folder')
 const files = require('../../functions/file')
+const git = require('../../functions/git')
+
 const getFolderSize = require('../../utils/getFolderSize')
 
 const resolvers = {
@@ -64,6 +66,8 @@ const resolvers = {
 			}
 			return new Error('ENOENT')
 		},
+		getCommitLog: async () =>
+			git.commitLog().then(response => response.allCommits),
 	},
 	Mutation: {
 		createFolder: (_, args) => {

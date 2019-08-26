@@ -27,10 +27,16 @@ const typeDefs = gql`
 		size: Int
 		createdAt: String
 	}
+	type Commit {
+		sha: String
+		message: String
+		time: String
+	}
 	type Query {
 		getFolderWithFiles(path: String): FolderWithFiles
 		getNestedFolders(path: String): Folder
 		getFile(path: String!): File
+		getCommitLog: [Commit]
 	}
 `
 
