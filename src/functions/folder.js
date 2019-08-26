@@ -6,8 +6,8 @@ const getFolderSize = require('../utils/getFolderSize')
 
 const getNestedFolders = async url => {
 	let content = await fs.readdirSync(url)
-	let folders = content.filter(item =>
-		fs.statSync(`${url}/${item}`).isDirectory()
+	let folders = content.filter(
+		item => fs.statSync(`${url}/${item}`).isDirectory() && item[0] !== '.'
 	)
 	let nestedData = folders.map(async folder => {
 		const stats = fs.statSync(`${url}/${folder}`)
@@ -32,30 +32,32 @@ const getNestedFolders = async url => {
 const getFolderWithFiles = async (url = './filesystem') => {
 	try {
 		let data = await fs.readdirSync(url)
-		let nestedData = data.map(async item => {
-			const stats = fs.statSync(`${url}/${item}`)
-			let node = {}
-			node.name = item
-			node.path = `${url}/${item}`
-			node.createdAt = stats.birthtime
-			if (stats.isFile()) {
-				const fileData = await files.getFile(`${url}/${item}`)
-				node.content = fileData.content
-				node.size = stats.size
-				node.type = 'file'
-			} else if (stats.isDirectory()) {
-				let functionResponse = await getFolderWithFiles(
-					`${url}/${item}`
-				)
-				node.children = functionResponse
-				node.type = 'folder'
-				const folderSize = await getFolderSize(`${url}/${item}`)
-					.map(file => fs.readFileSync(file))
-					.join('\n')
-				node.size = folderSize.length
-			}
-			return node
-		})
+		let nestedData = data
+			.filter(item => item[0] !== '.')
+			.map(async item => {
+				const stats = fs.statSync(`${url}/${item}`)
+				let node = {}
+				node.name = item
+				node.path = `${url}/${item}`
+				node.createdAt = stats.birthtime
+				if (stats.isFile()) {
+					const fileData = await files.getFile(`${url}/${item}`)
+					node.content = fileData.content
+					node.size = stats.size
+					node.type = 'file'
+				} else if (stats.isDirectory()) {
+					let functionResponse = await getFolderWithFiles(
+						`${url}/${item}`
+					)
+					node.children = functionResponse
+					node.type = 'folder'
+					const folderSize = await getFolderSize(`${url}/${item}`)
+						.map(file => fs.readFileSync(file))
+						.join('\n')
+					node.size = folderSize.length
+				}
+				return node
+			})
 		return Promise.all(nestedData).then(result => result)
 	} catch (e) {
 		console.log(e)
