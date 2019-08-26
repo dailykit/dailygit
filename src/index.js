@@ -9,10 +9,6 @@ const depthLimit = require('graphql-depth-limit')
 const schema = require('./schema/schema')
 
 // Import functions
-const gitcommit = require('./git-modification-code/git-add-and-commit')
-
-const gitCommits = require('./git-modification-code/git-commit-log')
-const gitStatus = require('./git-modification-code/git-status')
 const editorFiles = require('./editorfiles.js')
 
 const PORT = 4000
@@ -50,39 +46,6 @@ app.use(cors({ origin: '*' }))
 
 app.get('/', (req, res) => {
 	res.send('Welcome to File Manager Server API')
-})
-
-app.post('/commitFile', (req, res) => {
-	const { filePath } = req.body
-	const { commitMessage } = req.body
-	gitcommit.CommitFile(filePath, commitMessage).then(response => {
-		res.send(response)
-	})
-})
-app.get('/getCommitLog', (req, res) => {
-	gitCommits.getCommitLog().then(response => {
-		res.send(response)
-	})
-})
-
-app.get('/getGitStatus', (req, res) => {
-	gitStatus.gitStatus().then(response => {
-		res.send(response)
-	})
-})
-
-app.post('/getFile', (req, res) => {
-	filesystem.getFile(req.body.file).then(response => {
-		res.setHeader('Access-Control-Allow-Origin', '*')
-		res.setHeader('Access-Control-Allow-Headers', '*')
-		//      let data = JSON.stringify(response);
-		// res.send(data);
-		//      res.send({'status': 'success'});
-		const returndata = {
-			response,
-		}
-		res.send(returndata)
-	})
 })
 
 app.post('/addFileToEditor', (req, res) => {
