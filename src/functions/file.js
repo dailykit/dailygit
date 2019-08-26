@@ -7,8 +7,8 @@ const createFile = (givenPath, givenType) => {
 		let destination = `./${givenPath.split('./')[1]}`
 		if (fs.existsSync(source)) {
 			fs.copyFile(source, destination, err => {
-				if (err) reject(new Error('File could not be created!'))
-				resolve('File created successfully!')
+				if (err) return reject(new Error('File could not be created!'))
+				return resolve('File created successfully!')
 			})
 		} else {
 			reject(new Error(`Template file ${givenType} doesn't exists!`))
@@ -19,8 +19,8 @@ const createFile = (givenPath, givenType) => {
 const deleteFile = givenPath => {
 	return new Promise((resolve, reject) => {
 		fs.unlink(givenPath, err => {
-			if (err) reject("File doesn't exist!")
-			resolve('File deleted succesfully')
+			if (err) return reject("File doesn't exist!")
+			return resolve('File deleted succesfully')
 		})
 	})
 }

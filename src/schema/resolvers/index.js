@@ -97,7 +97,16 @@ const resolvers = {
 			if (fs.existsSync(args.path)) {
 				return 'File already exists!'
 			}
-			return files.createFile(args.path, args.type)
+			return files
+				.createFile(args.path, args.type)
+				.then(response => {
+					git.commit(
+						args.path,
+						`Created file ${args.path.split('/').pop()}.`
+					)
+					return response
+				})
+				.catch(failure => 'failure')
 		},
 		deleteFile: async (_, args) => {
 			if (fs.existsSync(args.path)) {
