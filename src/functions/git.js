@@ -1,7 +1,7 @@
 var nodegit = require('nodegit')
 var path = require('path')
 
-const commit = (filepath, gitmessage) => {
+const addAndCommit = (filepath, gitmessage) => {
 	return new Promise((resolve, reject) => {
 		let filepathArray = filepath.split('/')
 		let directoryName = './'
@@ -61,8 +61,6 @@ const commit = (filepath, gitmessage) => {
 				}
 				//JSON.stringify(commitObject);
 				let stringMessage = JSON.stringify(commitObject)
-				console.log(stringMessage)
-				console.log(typeof stringMessage)
 				return repo.createCommit(
 					'HEAD',
 					author,
@@ -87,10 +85,6 @@ const commitLog = () => {
 				return repo
 					.getCurrentBranch()
 					.then(function(ref) {
-						console.log(
-							'On ' + ref.shorthand() + ' (' + ref.target() + ')'
-						)
-
 						/* Get the commit that the branch points at. */
 						return repo.getBranchCommit(ref.shorthand())
 					})
@@ -113,21 +107,89 @@ const commitLog = () => {
 							time: commit.date(),
 							// }
 						}))
-						console.log(allCommits)
 						resolve({ allCommits })
 					})
 			})
 			.catch(function(err) {
 				console.log(err)
 			})
-			.done(function() {
-				// resolve({returnObject});
-				console.log('Finished')
+	})
+}
+
+const removeAndCommit = (filepath, gitmessage) => {
+	return new Promise((resolve, reject) => {
+		let filepathArray = filepath.split('/')
+		let directoryName = './'
+		for (let i = 2; i < filepathArray.length - 1; i++) {
+			directoryName += filepathArray[i] + '/'
+		}
+
+		let fileName = filepathArray[filepathArray.length - 1]
+		var _repository
+		var _index
+		var _oid
+		nodegit.Repository.open('./filesystem')
+			.then(function(repo) {
+				_repository = repo
+				return repo.refreshIndex()
 			})
+			.then(function(index) {
+				_index = index
+			})
+			.then(function() {
+				//remove the file from the index...
+				return _index.removeByPath(fileName)
+			})
+			.then(function() {
+				return _index.write()
+			})
+			.then(function() {
+				return _index.writeTree()
+			})
+			.then(function(oid) {
+				_oid = oid
+				return nodegit.Reference.nameToId(_repository, 'HEAD')
+			})
+			.then(function(head) {
+				return _repository.getCommit(head)
+			})
+			.then(function(parent) {
+				var author = nodegit.Signature.now(
+					'Suresh',
+					'suresh@dailykit.org'
+				)
+				var committer = nodegit.Signature.now(
+					'Suresh',
+					'suresh@dailykit.org'
+				)
+				let commitObject = {
+					message: gitmessage,
+					filepath: filepath,
+				}
+				//JSON.stringify(commitObject);
+				let stringMessage = JSON.stringify(commitObject)
+
+				return _repository.createCommit(
+					'HEAD',
+					author,
+					committer,
+					stringMessage,
+					_oid,
+					[parent]
+				)
+			})
+			.then(function(commitId) {
+				// the file is removed from the git repo, use fs.unlink now to remove it
+				// from the filesystem.
+				resolve({ CommitId: commitId })
+			})
+			.done()
 	})
 }
 
 module.exports = {
-	commit,
+	status,
+	addAndCommit,
+	removeAndCommit,
 	commitLog,
 }

@@ -100,7 +100,7 @@ const resolvers = {
 			return files
 				.createFile(args.path, args.type)
 				.then(response => {
-					git.commit(
+					git.addAndCommit(
 						args.path,
 						`Created file ${args.path.split('/').pop()}.`
 					)
@@ -110,7 +110,7 @@ const resolvers = {
 		},
 		deleteFile: async (_, args) => {
 			if (fs.existsSync(args.path)) {
-				await git.commit(
+				await git.removeAndCommit(
 					args.path,
 					`Deleted file ${args.path.split('/').pop()}.`
 				)
@@ -126,7 +126,7 @@ const resolvers = {
 				return files
 					.updateFile(args.path, args.data)
 					.then(response => {
-						git.commit(args.path, args.commitMessage)
+						git.addAndCommit(args.path, args.commitMessage)
 						return response
 					})
 					.catch(failure => failure)
@@ -138,7 +138,7 @@ const resolvers = {
 				return files
 					.renameFile(args.oldPath, args.newPath)
 					.then(response => {
-						git.commit(
+						git.addAndCommit(
 							args.newPath,
 							`Renamed file ${args.oldPath
 								.split('/')
