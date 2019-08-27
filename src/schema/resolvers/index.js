@@ -106,7 +106,7 @@ const resolvers = {
 					)
 					return response
 				})
-				.catch(failure => 'failure')
+				.catch(failure => failure)
 		},
 		deleteFile: async (_, args) => {
 			if (fs.existsSync(args.path)) {
@@ -130,7 +130,15 @@ const resolvers = {
 			if (fs.existsSync(args.oldPath)) {
 				return files
 					.renameFile(args.oldPath, args.newPath)
-					.then(sucess => sucess)
+					.then(response => {
+						git.commit(
+							args.newPath,
+							`Renamed file ${args.oldPath
+								.split('/')
+								.pop()} to ${args.newPath.split('/').pop()}`
+						)
+						return response
+					})
 					.catch(failure => failure)
 			}
 			return new Error('ENOENT')
