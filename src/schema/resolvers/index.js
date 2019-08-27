@@ -110,7 +110,14 @@ const resolvers = {
 		},
 		deleteFile: async (_, args) => {
 			if (fs.existsSync(args.path)) {
-				return files.deleteFile(args.path)
+				await git.commit(
+					args.path,
+					`Deleted file ${args.path.split('/').pop()}.`
+				)
+				return await files
+					.deleteFile(args.path)
+					.then(response => response)
+					.catch(failure => failure)
 			}
 			return new Error('ENOENT')
 		},
