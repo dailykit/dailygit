@@ -118,7 +118,10 @@ const resolvers = {
 			if (fs.existsSync(args.path)) {
 				return files
 					.updateFile(args.path, args.data)
-					.then(sucess => sucess)
+					.then(response => {
+						git.commit(args.path, args.commitMessage)
+						return response
+					})
 					.catch(failure => failure)
 			}
 			return new Error('ENOENT')
