@@ -188,7 +188,6 @@ const removeAndCommit = (filepath, gitmessage) => {
 }
 
 module.exports = {
-	status,
 	addAndCommit,
 	removeAndCommit,
 	commitLog,

@@ -9,7 +9,7 @@ const depthLimit = require('graphql-depth-limit')
 const schema = require('./schema/schema')
 
 // Import functions
-const editorFiles = require('./editorfiles.js')
+const editorFiles = require('./functions/socket')
 
 const PORT = 4000
 const apolloserver = new ApolloServer({
@@ -50,15 +50,10 @@ app.get('/', (req, res) => {
 
 app.post('/addFileToEditor', (req, res) => {
 	editorFiles.addToList(req.body.file).then(data => {
-		// res.send(data);
 		res.send({ status: 'File is added' })
 	})
 
-	// io.on('connect', (socket) => {
-	// console.log('Connected!');
-	// const socket = io.connect('http://localhost:3000');
 	io.emit('OpenedFiles', 'Server', req.body.file)
-	// });
 })
 
 app.get('/getEditorFiles', (req, res) => {
