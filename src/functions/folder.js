@@ -1,5 +1,6 @@
 const fs = require('fs')
 const path = require('path')
+const rimraf = require('rimraf')
 
 const files = require('./file')
 const getFolderSize = require('../utils/getFolderSize')
@@ -79,24 +80,10 @@ const createFolder = async url => {
 	return 'Folder created successfuly!'
 }
 
-const deleteFolder = dirPath => {
-	let list = fs.readdirSync(dirPath)
-	for (var i = 0; i < list.length; i++) {
-		var filename = path.join(dirPath, list[i])
-		var stat = fs.statSync(filename)
-
-		if (filename == '.' || filename == '..') {
-			// do nothing for current and parent dir
-		} else if (stat.isDirectory()) {
-			deleteFolder(filename)
-		} else {
-			fs.unlinkSync(filename)
-		}
-	}
-	if (list.length === 0) {
-		fs.rmdirSync(dirPath)
-	}
-}
+const deleteFolder = givenPath =>
+	rimraf(givenPath, err => {
+		console.log('err', err)
+	})
 
 const renameFolder = async (oldPath, newPath) => {
 	return new Promise((resolve, reject) => {
