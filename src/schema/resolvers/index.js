@@ -1,6 +1,8 @@
 const path = require('path')
 const _ = require('lodash')
 const fs = require('fs')
+const http = require('http')
+const io = require('socket.io')(http)
 
 const folders = require('../../functions/folder')
 const files = require('../../functions/file')
@@ -70,6 +72,10 @@ const resolvers = {
 			git.commitLog().then(response => response.allCommits),
 	},
 	Mutation: {
+		addFileToSocketChannel: async (_, args) => {
+			console.log(args)
+			await io.emit('OpenedFiles', 'Server', args.path)
+		},
 		createFolder: (_, args) => {
 			if (fs.existsSync(args.path)) {
 				return 'Folder already exists!'

@@ -17,6 +17,7 @@ const mutations = gql`
 		updateFile(path: String!, data: String!, commitMessage: String!): String
 		"Mutation to rename a file"
 		renameFile(oldPath: String!, newPath: String!): String
+		addFileToSocketChannel(path: String!): String
 	}
 `
 
