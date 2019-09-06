@@ -44,16 +44,21 @@ const getFile = givenPath => {
 	})
 }
 
-const searchFiles = async (givenPath = './filesystem') => {
+const searchFiles = async fileName => {
 	function ignoreFunc(file) {
 		return path.basename(file) === '.git'
 	}
 	return new Promise((resolve, reject) => {
-		getFilesRecursively(givenPath, [ignoreFunc], (err, files) => {
+		getFilesRecursively('./filesystem', [ignoreFunc], (err, files) => {
 			if (err) return reject(new Error(err))
-			const formatted = files.map(
-				file => `./${file.split('\\').join('/')}`
-			)
+			const formatted = files
+				.map(file => `./${file.split('\\').join('/')}`)
+				.filter(file =>
+					path
+						.basename(file)
+						.toLowerCase()
+						.includes(fileName.toLowerCase())
+				)
 			const result = {
 				menus: [],
 				packages: [],
