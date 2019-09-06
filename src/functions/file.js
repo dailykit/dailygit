@@ -1,5 +1,6 @@
 const fs = require('fs')
 const path = require('path')
+const getFilesRecursively = require('recursive-readdir')
 
 const createFile = (givenPath, givenType) => {
 	return new Promise((resolve, reject) => {
@@ -43,6 +44,45 @@ const getFile = givenPath => {
 	})
 }
 
+const searchFiles = async (givenPath = './filesystem') => {
+	function ignoreFunc(file) {
+		return path.basename(file) === '.git'
+	}
+	return new Promise((resolve, reject) => {
+		getFilesRecursively(givenPath, [ignoreFunc], (err, files) => {
+			if (err) return reject(new Error(err))
+			const formatted = files.map(
+				file => `./${file.split('\\').join('/')}`
+			)
+			const result = {
+				menus: [],
+				packages: [],
+				ingredients: [],
+				recipes: [],
+				dishes: [],
+			}
+			formatted.map(file => {
+				const type = file.split('/')[2].toLowerCase()
+				switch (type) {
+					case 'dishes':
+						return result.dishes.push(file)
+					case 'packages':
+						return result.packages.push(file)
+					case 'recipes':
+						return result.recipes.push(file)
+					case 'ingredients':
+						return result.ingredients.push(file)
+					case 'menus':
+						return result.menus.push(file)
+					default:
+						break
+				}
+			})
+			return resolve(result)
+		})
+	})
+}
+
 const updateFile = async (givenPath, data) => {
 	return new Promise((resolve, reject) => {
 		fs.writeFile(givenPath, data, function(err) {
@@ -71,4 +111,5 @@ module.exports = {
 	getFile,
 	updateFile,
 	renameFile,
+	searchFiles,
 }

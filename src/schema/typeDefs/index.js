@@ -32,10 +32,18 @@ const typeDefs = gql`
 		message: String
 		time: String
 	}
+	type SearchFilesList {
+		menus: [String]
+		packages: [String]
+		ingredients: [String]
+		recipes: [String]
+		dishes: [String]
+	}
 	type Query {
 		getFolderWithFiles(path: String): FolderWithFiles
 		getNestedFolders(path: String): Folder
 		getFile(path: String!): File
+		searchFiles(path: String!): SearchFilesList
 		getCommitLog: [Commit]
 	}
 `

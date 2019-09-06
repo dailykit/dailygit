@@ -71,6 +71,11 @@ const resolvers = {
 			}
 			return new Error('ENOENT')
 		},
+		searchFiles: (_, args) =>
+			files
+				.searchFiles(args.path)
+				.then(data => data)
+				.catch(e => e),
 		getCommitLog: async () =>
 			git.commitLog().then(response => response.allCommits),
 	},
