@@ -10,6 +10,7 @@
     "graphql": "^14.5.3",
     "graphql-depth-limit": "^1.1.0",
     "graphql-tools": "^4.0.5",
+    "isomorphic-git": "^0.64.6",
     "lodash": "^4.17.15",
     "node-pre-gyp": "^0.13.0",
     "nodegit": "^0.25.1",

@@ -1,12 +1,15 @@
 const path = require('path')
 const _ = require('lodash')
 const fs = require('fs')
+const os = require('os')
 const http = require('http')
 const io = require('socket.io')(http)
 
+const git = require('isomorphic-git')
+git.plugins.set('fs', fs)
+
 const folders = require('../../functions/folder')
 const files = require('../../functions/file')
-const git = require('../../functions/git')
 
 const getFolderSize = require('../../utils/getFolderSize')
 
@@ -105,21 +108,45 @@ const resolvers = {
 			}
 			return files
 				.createFile(args.path, args.type)
-				.then(response => {
-					git.addAndCommit(
-						args.path,
-						`Created file ${args.path.split('/').pop()}.`
-					)
+				.then(async response => {
+					await git.add({
+						dir: 'filesystem',
+						filepath: args.path
+							.split('/')
+							.slice(2)
+							.join('/'),
+					})
+					await git.commit({
+						dir: 'filesystem',
+						// TODO: Add the current user's name & email
+						author: {
+							name: 'Marky Mark',
+							email: 'markymark@example.com',
+						},
+						message: `Created file ${args.path.split('/').pop()}.`,
+					})
 					return response
 				})
 				.catch(failure => failure)
 		},
 		deleteFile: async (_, args) => {
 			if (fs.existsSync(args.path)) {
-				await git.removeAndCommit(
-					args.path,
-					`Deleted file ${args.path.split('/').pop()}.`
-				)
+				await git.remove({
+					dir: 'filesystem',
+					filepath: args.path
+						.split('/')
+						.slice(2)
+						.join('/'),
+				})
+				await git.commit({
+					dir: 'filesystem',
+					// TODO: Add the current user's name & email
+					author: {
+						name: 'Marky Mark',
+						email: 'markymark@example.com',
+					},
+					message: `Deleted file ${args.path.split('/').pop()}.`,
+				})
 				return await files
 					.deleteFile(args.path)
 					.then(response => response)
@@ -132,7 +159,6 @@ const resolvers = {
 				return files
 					.updateFile(args.path, args.data)
 					.then(response => {
-						git.addAndCommit(args.path, args.commitMessage)
 						return response
 					})
 					.catch(failure => failure)
@@ -144,12 +170,6 @@ const resolvers = {
 				return files
 					.renameFile(args.oldPath, args.newPath)
 					.then(response => {
-						git.addAndCommit(
-							args.newPath,
-							`Renamed file ${args.oldPath
-								.split('/')
-								.pop()} to ${args.newPath.split('/').pop()}`
-						)
 						return response
 					})
 					.catch(failure => failure)
