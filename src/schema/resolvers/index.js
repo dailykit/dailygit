@@ -84,6 +84,13 @@ const resolvers = {
 			})
 			return log
 		},
+		getCommit: async (_, { id }) => {
+			let { object: commit } = await git.readObject({
+				dir: 'filesystem',
+				oid: id,
+			})
+			return commit
+		},
 	},
 	Mutation: {
 		addFileToSocketChannel: async (_, args) => {
