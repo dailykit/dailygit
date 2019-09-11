@@ -27,10 +27,26 @@ const typeDefs = gql`
 		size: Int
 		createdAt: String
 	}
+
+	type Author {
+		name: String
+		email: String
+		timestamp: String
+	}
+
+	type Committer {
+		name: String
+		email: String
+		timestamp: String
+	}
+
 	type Commit {
-		sha: String
+		oid: String
 		message: String
-		time: String
+		tree: String
+		parent: [String]
+		author: Author
+		committer: Committer
 	}
 	type SearchFilesList {
 		menus: [String]

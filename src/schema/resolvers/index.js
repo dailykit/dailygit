@@ -76,12 +76,17 @@ const resolvers = {
 				.searchFiles(args.path)
 				.then(data => data)
 				.catch(e => e),
-		getCommitLog: async () =>
-			git.commitLog().then(response => response.allCommits),
+		getCommitLog: async () => {
+			const log = await git.log({
+				dir: 'filesystem',
+				depth: 10,
+				ref: 'master',
+			})
+			return log
+		},
 	},
 	Mutation: {
 		addFileToSocketChannel: async (_, args) => {
-			console.log(args)
 			await io.emit('OpenedFiles', 'Server', args.path)
 		},
 		createFolder: (_, args) => {
