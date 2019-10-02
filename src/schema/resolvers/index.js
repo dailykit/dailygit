@@ -188,9 +188,22 @@ const resolvers = {
 		},
 		deleteFile: async (_, args) => {
 			if (fs.existsSync(args.path)) {
+				await git.remove({
+					dir: path.parse(args.path).dir,
+					filepath: path.basename(args.path),
+				})
+				// TODO: Add the logged in user's credentials
+				await git.commit({
+					dir: path.parse(args.path).dir,
+					author: {
+						name: 'Placeholder',
+						email: 'placeholder@example.com',
+					},
+					message: `Deleted: ${path.basename(args.path)}`,
+				})
 				return await files
 					.deleteFile(args.path)
-					.then(response => response)
+					.then(() => `Deleted: ${path.basename(args.path)}`)
 					.catch(failure => failure)
 			}
 			return new Error('ENOENT')
