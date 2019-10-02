@@ -5,23 +5,9 @@ const getFilesRecursively = require('recursive-readdir')
 const git = require('isomorphic-git')
 git.plugins.set('fs', fs)
 
+const { getRelFilePath, getRepoPath } = require('../utils/parsePath')
+
 const baseFolder = './../apps/'
-
-const getRepoPath = givenPath =>
-	givenPath
-		.split(baseFolder)
-		.filter(Boolean)[0]
-		.split('/')
-		.slice(0, 3)
-		.join('/')
-
-const getRelFilePath = givenPath =>
-	givenPath
-		.split(baseFolder)
-		.filter(Boolean)[0]
-		.split('/')
-		.slice(3)
-		.join('/')
 
 const createFile = ({ path: givenPath, content }) => {
 	return new Promise((resolve, reject) => {
@@ -155,19 +141,6 @@ const searchFiles = async fileName => {
 	})
 }
 
-const getAllFilesWithInFolder = async givenPath => {
-	function ignoreFunc(file) {
-		return path.basename(file) === '.git'
-	}
-	return new Promise((resolve, reject) => {
-		getFilesRecursively(givenPath, [ignoreFunc], (err, files) => {
-			if (err) return reject(new Error(err))
-			const result = files.map(file => `./${file.split('\\').join('/')}`)
-			return resolve(result)
-		})
-	})
-}
-
 const updateFile = async (givenPath, data) => {
 	return new Promise((resolve, reject) => {
 		fs.writeFile(givenPath, data, function(err) {
@@ -197,5 +170,4 @@ module.exports = {
 	updateFile,
 	renameFile,
 	searchFiles,
-	getAllFilesWithInFolder,
 }

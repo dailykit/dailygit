@@ -10,23 +10,9 @@ git.plugins.set('fs', fs)
 const files = require('./file')
 const getFolderSize = require('../utils/getFolderSize')
 
+const { getRelFilePath, getRepoPath } = require('../utils/parsePath')
+
 const baseFolder = './../apps/'
-
-const getRepoPath = givenPath =>
-	givenPath
-		.split(baseFolder)
-		.filter(Boolean)[0]
-		.split('/')
-		.slice(0, 3)
-		.join('/')
-
-const getRelFilePath = givenPath =>
-	givenPath
-		.split(baseFolder)
-		.filter(Boolean)[0]
-		.split('/')
-		.slice(3)
-		.join('/')
 
 const getNestedFolders = async url => {
 	let content = await fs.readdirSync(url)
