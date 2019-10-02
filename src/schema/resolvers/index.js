@@ -164,27 +164,7 @@ const resolvers = {
 			if (fs.existsSync(args.path)) {
 				return 'File already exists!'
 			}
-			fs.writeFile(
-				args.path,
-				JSON.stringify(args.content, null, 2),
-				err => {
-					if (err) return new Error(err)
-					git.add({
-						dir: path.parse(args.path).dir,
-						filepath: path.basename(args.path),
-					})
-					// TODO: Add the logged in user's credentials
-					git.commit({
-						dir: path.parse(args.path).dir,
-						author: {
-							name: 'Placeholder',
-							email: 'placeholder@example.com',
-						},
-						message: `Added: ${path.basename(args.path)}`,
-					})
-					return `Added: ${path.basename(args.path)}`
-				}
-			)
+			return files.createFile(args).then(resp => resp)
 		},
 		deleteFile: async (_, args) => {
 			if (fs.existsSync(args.path)) {

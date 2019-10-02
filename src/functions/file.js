@@ -2,18 +2,58 @@ const fs = require('fs')
 const path = require('path')
 const getFilesRecursively = require('recursive-readdir')
 
-const createFile = (givenPath, givenType) => {
+const git = require('isomorphic-git')
+git.plugins.set('fs', fs)
+
+const baseFolder = './../apps/'
+
+const createFile = ({ path: givenPath, content }) => {
 	return new Promise((resolve, reject) => {
-		let source = `./src/templates/${givenType}.json`
-		let destination = `./${givenPath.split('./')[1]}`
-		if (fs.existsSync(source)) {
-			fs.copyFile(source, destination, err => {
-				if (err) return reject(new Error('File could not be created!'))
-				return resolve('File created successfully!')
-			})
-		} else {
-			reject(new Error(`Template file ${givenType} doesn't exists!`))
+		// Check if folder exists
+		if (!fs.existsSync(path.dirname(givenPath))) {
+			fs.mkdirSync(path.dirname(givenPath), { recursive: true })
 		}
+
+		// Create the file
+		fs.writeFileSync(givenPath, JSON.stringify(content, null, 2))
+
+		let repoPath = givenPath
+			.split(baseFolder)
+			.filter(Boolean)[0]
+			.split('/')
+			.slice(0, 3)
+			.join('/')
+
+		let relFilePath = givenPath
+			.split(baseFolder)
+			.filter(Boolean)[0]
+			.split('/')
+			.slice(3)
+			.join('/')
+
+		// Stage the file
+		git.add({
+			dir: `${baseFolder}${repoPath}`,
+			filePath: `${relFilePath}/${path.basename(givenPath)}`,
+		}).catch(error => reject(new Error(error)))
+
+		// Commit the file
+		git.commit({
+			dir: `${baseFolder}${repoPath}`,
+			author: {
+				name: 'placeholder',
+				email: 'placeholder@example.com',
+			},
+			commiter: {
+				name: 'placeholder',
+				email: 'placeholder@example.com',
+			},
+			message: `Added: ${path.basename(givenPath)}`,
+		})
+			.then(sha => console.log({ sha }))
+			.catch(error => reject(new Error(error)))
+
+		return resolve(`Added: ${path.basename(givenPath)}`)
 	})
 }
 
