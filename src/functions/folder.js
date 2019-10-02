@@ -2,8 +2,31 @@ const fs = require('fs')
 const path = require('path')
 const rimraf = require('rimraf')
 
+const getFilesRecursively = require('recursive-readdir')
+
+const git = require('isomorphic-git')
+git.plugins.set('fs', fs)
+
 const files = require('./file')
 const getFolderSize = require('../utils/getFolderSize')
+
+const baseFolder = './../apps/'
+
+const getRepoPath = givenPath =>
+	givenPath
+		.split(baseFolder)
+		.filter(Boolean)[0]
+		.split('/')
+		.slice(0, 3)
+		.join('/')
+
+const getRelFilePath = givenPath =>
+	givenPath
+		.split(baseFolder)
+		.filter(Boolean)[0]
+		.split('/')
+		.slice(3)
+		.join('/')
 
 const getNestedFolders = async url => {
 	let content = await fs.readdirSync(url)
@@ -80,10 +103,47 @@ const createFolder = async url => {
 	})
 }
 
-const deleteFolder = givenPath =>
-	rimraf(givenPath, err => {
-		if (err) return err
+const deleteFolder = givenPath => {
+	return new Promise(async (resolve, reject) => {
+		// Get all file paths from the folder
+		const allFilePaths = await getPathsOfAllFilesInFolder(givenPath).then(
+			files => files
+		)
+
+		for (let file of allFilePaths) {
+			// Remove the file from the git index
+			git.remove({
+				dir: `${baseFolder}${getRepoPath(file)}`,
+				filePath: `${getRelFilePath(file)}/${path.basename(file)}`,
+			}).catch(error => reject(new Error(error)))
+
+			// Commit the deleted file
+			git.commit({
+				dir: `${baseFolder}${getRepoPath(file)}`,
+				author: {
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				},
+				commiter: {
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				},
+				message: `Deleted: ${path.basename(file)}`,
+			})
+				.then(sha => console.log({ sha }))
+				.catch(error => reject(new Error(error)))
+
+			// Delete the file
+			fs.unlink(file, err => {
+				if (err) return reject(new Error(err))
+			})
+		}
+		rimraf(givenPath, err => {
+			if (err) return err
+			resolve(`Deleted : ${path.basename(givenPath)} folder`)
+		})
 	})
+}
 
 const renameFolder = (oldPath, newPath) => {
 	return new Promise((resolve, reject) => {
@@ -92,6 +152,19 @@ const renameFolder = (oldPath, newPath) => {
 				return reject(err)
 			}
 			return resolve('Folder has been renamed successfully!')
+		})
+	})
+}
+
+const getPathsOfAllFilesInFolder = async givenPath => {
+	function ignoreFunc(file) {
+		return path.basename(file) === '.git'
+	}
+	return new Promise((resolve, reject) => {
+		getFilesRecursively(givenPath, [ignoreFunc], (err, files) => {
+			if (err) return reject(new Error(err))
+			const result = files.map(file => `./${file.split('\\').join('/')}`)
+			return resolve(result)
 		})
 	})
 }

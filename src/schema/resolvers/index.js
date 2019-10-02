@@ -136,14 +136,9 @@ const resolvers = {
 				return folders.createFolder(args.path)
 			}
 		},
-		deleteFolder: async (_, args) => {
+		deleteFolder: (_, args) => {
 			if (fs.existsSync(args.path)) {
-				return await files
-					.getAllFilesWithInFolder(args.path)
-					.then(files => {
-						folders.deleteFolder(args.path)
-						return 'Folder deleted successfully!'
-					})
+				return folders.deleteFolder(args.path).then(resp => resp)
 			}
 			return new Error('ENOENT')
 		},
