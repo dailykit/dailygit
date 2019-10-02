@@ -7,6 +7,22 @@ git.plugins.set('fs', fs)
 
 const baseFolder = './../apps/'
 
+const getRepoPath = givenPath =>
+	givenPath
+		.split(baseFolder)
+		.filter(Boolean)[0]
+		.split('/')
+		.slice(0, 3)
+		.join('/')
+
+const getRelFilePath = givenPath =>
+	givenPath
+		.split(baseFolder)
+		.filter(Boolean)[0]
+		.split('/')
+		.slice(3)
+		.join('/')
+
 const createFile = ({ path: givenPath, content }) => {
 	return new Promise((resolve, reject) => {
 		// Check if folder exists
@@ -17,29 +33,17 @@ const createFile = ({ path: givenPath, content }) => {
 		// Create the file
 		fs.writeFileSync(givenPath, JSON.stringify(content, null, 2))
 
-		let repoPath = givenPath
-			.split(baseFolder)
-			.filter(Boolean)[0]
-			.split('/')
-			.slice(0, 3)
-			.join('/')
-
-		let relFilePath = givenPath
-			.split(baseFolder)
-			.filter(Boolean)[0]
-			.split('/')
-			.slice(3)
-			.join('/')
-
 		// Stage the file
 		git.add({
-			dir: `${baseFolder}${repoPath}`,
-			filePath: `${relFilePath}/${path.basename(givenPath)}`,
+			dir: `${baseFolder}${getRepoPath(givenPath)}`,
+			filePath: `${getRelFilePath(givenPath)}/${path.basename(
+				givenPath
+			)}`,
 		}).catch(error => reject(new Error(error)))
 
 		// Commit the file
 		git.commit({
-			dir: `${baseFolder}${repoPath}`,
+			dir: `${baseFolder}${getRepoPath(givenPath)}`,
 			author: {
 				name: 'placeholder',
 				email: 'placeholder@example.com',
@@ -59,9 +63,32 @@ const createFile = ({ path: givenPath, content }) => {
 
 const deleteFile = givenPath => {
 	return new Promise((resolve, reject) => {
+		// Remove the file from the git index
+		git.remove({
+			dir: `${baseFolder}${getRepoPath(givenPath)}`,
+			filePath: `${getRelFilePath(givenPath)}/${path.basename(
+				givenPath
+			)}`,
+		}).catch(error => reject(new Error(error)))
+
+		// Commit the deleted file
+		git.commit({
+			dir: `${baseFolder}${getRepoPath(givenPath)}`,
+			author: {
+				name: 'placeholder',
+				email: 'placeholder@example.com',
+			},
+			commiter: {
+				name: 'placeholder',
+				email: 'placeholder@example.com',
+			},
+			message: `Deleted: ${path.basename(givenPath)}`,
+		})
+
+		// Delete the file
 		fs.unlink(givenPath, err => {
-			if (err) return reject("File doesn't exist!")
-			return resolve('File deleted succesfully')
+			if (err) return reject(new Error(err))
+			return resolve(`Deleted: ${path.basename(givenPath)}`)
 		})
 	})
 }
