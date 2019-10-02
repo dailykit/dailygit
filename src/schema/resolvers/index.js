@@ -94,7 +94,7 @@ const resolvers = {
 			const paths = [appPath, `${appPath}/data`, `${appPath}/schema`]
 			const { schemas } = JSON.parse(args.schemas)
 
-			// Adsd Schema, Data Folder Paths
+			// Add Schema, Data Folder Paths
 			await schemas.map(folder => {
 				paths.push(`${appPath}/schema/${folder.path}`)
 				paths.push(`${appPath}/data/${folder.path}`)
@@ -134,7 +134,6 @@ const resolvers = {
 				return await files
 					.getAllFilesWithInFolder(args.path)
 					.then(files => {
-						console.log(files)
 						folders.deleteFolder(args.path)
 						return 'Folder deleted successfully!'
 					})
@@ -146,7 +145,6 @@ const resolvers = {
 				return await files
 					.getAllFilesWithInFolder(args.oldPath)
 					.then(files => {
-						console.log(files)
 						return folders
 							.renameFolder(args.oldPath, args.newPath)
 							.then(sucess => sucess)
@@ -161,45 +159,11 @@ const resolvers = {
 			}
 			return files
 				.createFile(args.path, args.type)
-				.then(async response => {
-					await git.add({
-						dir: baseFolder,
-						filepath: args.path
-							.split('/')
-							.slice(2)
-							.join('/'),
-					})
-					await git.commit({
-						dir: baseFolder,
-						// TODO: Add the current user's name & email
-						author: {
-							name: 'Marky Mark',
-							email: 'markymark@example.com',
-						},
-						message: `Created file ${args.path.split('/').pop()}.`,
-					})
-					return response
-				})
+				.then(resonse => response)
 				.catch(failure => failure)
 		},
 		deleteFile: async (_, args) => {
 			if (fs.existsSync(args.path)) {
-				await git.remove({
-					dir: baseFolder,
-					filepath: args.path
-						.split('/')
-						.slice(2)
-						.join('/'),
-				})
-				await git.commit({
-					dir: baseFolder,
-					// TODO: Add the current user's name & email
-					author: {
-						name: 'Marky Mark',
-						email: 'markymark@example.com',
-					},
-					message: `Deleted file ${args.path.split('/').pop()}.`,
-				})
 				return await files
 					.deleteFile(args.path)
 					.then(response => response)
