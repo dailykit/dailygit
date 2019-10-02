@@ -9,6 +9,9 @@ const folders = require('../../functions/folder')
 const files = require('../../functions/file')
 
 const getFolderSize = require('../../utils/getFolderSize')
+
+const baseFolder = './../apps'
+
 const resolvers = {
 	FolderOrFile: {
 		__resolveType: obj => {
@@ -105,8 +108,12 @@ const resolvers = {
 				folders.createFolder(path).then(() =>
 					schemas.map(folder =>
 						folder.entities.map(file => {
-							const folderPath = `${appPath}/schema/${folder.path}`
-							const filepath = `${folderPath}/${file.name}.json`
+							const folderPath = folderName =>
+								`${appPath}/${folderName}/${folder.path}`
+							git.init({ dir: folderPath('data') })
+							const filepath = `${folderPath('schema')}/${
+								file.name
+							}.json`
 							if (fs.existsSync(folderPath)) {
 								return fs.writeFile(
 									filepath,
@@ -153,14 +160,31 @@ const resolvers = {
 			}
 			return new Error('ENOENT')
 		},
-		createFile: async (_, args) => {
+		createFile: (_, args) => {
 			if (fs.existsSync(args.path)) {
 				return 'File already exists!'
 			}
-			return files
-				.createFile(args.path, args.type)
-				.then(resonse => response)
-				.catch(failure => failure)
+			fs.writeFile(
+				args.path,
+				JSON.stringify(args.content, null, 2),
+				err => {
+					if (err) return new Error(err)
+					git.add({
+						dir: path.parse(args.path).dir,
+						filepath: path.basename(args.path),
+					})
+					// TODO: Add the logged in user's credentials
+					git.commit({
+						dir: path.parse(args.path).dir,
+						author: {
+							name: 'Placeholder',
+							email: 'placeholder@example.com',
+						},
+						message: `Added: ${path.basename(args.path)}`,
+					})
+					return `Added: ${path.basename(args.path)}`
+				}
+			)
 		},
 		deleteFile: async (_, args) => {
 			if (fs.existsSync(args.path)) {
