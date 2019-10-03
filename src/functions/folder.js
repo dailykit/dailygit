@@ -100,7 +100,7 @@ const deleteFolder = givenPath => {
 			// Remove the file from the git index
 			git.remove({
 				dir: `${baseFolder}${getRepoPath(file)}`,
-				filePath: `${getRelFilePath(file)}/${path.basename(file)}`,
+				filepath: path.basename(file),
 			}).catch(error => reject(new Error(error)))
 
 			// Commit the deleted file

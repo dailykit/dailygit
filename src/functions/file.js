@@ -22,9 +22,7 @@ const createFile = ({ path: givenPath, content }) => {
 		// Stage the file
 		git.add({
 			dir: `${baseFolder}${getRepoPath(givenPath)}`,
-			filePath: `${getRelFilePath(givenPath)}/${path.basename(
-				givenPath
-			)}`,
+			filepath: path.basename(givenPath),
 		}).catch(error => reject(new Error(error)))
 
 		// Commit the file
@@ -52,9 +50,7 @@ const deleteFile = givenPath => {
 		// Remove the file from the git index
 		git.remove({
 			dir: `${baseFolder}${getRepoPath(givenPath)}`,
-			filePath: `${getRelFilePath(givenPath)}/${path.basename(
-				givenPath
-			)}`,
+			filepath: path.basename(givenPath),
 		}).catch(error => reject(new Error(error)))
 
 		// Commit the deleted file
