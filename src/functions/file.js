@@ -154,12 +154,61 @@ const updateFile = async (givenPath, data) => {
 
 const renameFile = async (oldPath, newPath) => {
 	return new Promise((resolve, reject) => {
-		fs.rename(oldPath, newPath, function(err) {
-			if (err) {
-				return reject(err)
-			}
+		// Check if newPath file exists
+		if (oldPath === newPath) {
+			return resolve("New name can't be the same old name!")
+		} else if (fs.existsSync(newPath)) {
+			return resolve('File already exists!')
+		}
+
+		// Copy old file to renamed file
+		fs.copyFile(oldPath, newPath, async err => {
+			if (err) return reject(new Error(err))
+
+			// Delete the old file
+			await fs.unlinkSync(oldPath)
+
+			// Remove the old file from git index
+			await git
+				.remove({
+					dir: `${baseFolder}${getRepoPath(oldPath)}`,
+					filepath: path.basename(oldPath),
+				})
+				.catch(error => reject(new Error(error)))
+
+			// Add the renamed file to staging
+			await git
+				.add({
+					dir: `${baseFolder}${getRepoPath(newPath)}`,
+					filepath: path.basename(newPath),
+				})
+				.catch(error => reject(new Error(error)))
+
+			// Commit the staged files
+			await git
+				.commit({
+					dir: `${baseFolder}${getRepoPath(oldPath)}`,
+					author: {
+						name: 'placeholder',
+						email: 'placeholder@example.com',
+					},
+					commiter: {
+						name: 'placeholder',
+						email: 'placeholder@example.com',
+					},
+					message: `Renamed: ${path.basename(
+						oldPath
+					)} file to ${path.basename(newPath)}`,
+				})
+				.then(sha => console.log(sha))
+
+			// Resolve the promise
+			return resolve(
+				`Renamed: ${path.basename(oldPath)} file to ${path.basename(
+					newPath
+				)}`
+			)
 		})
-		resolve('File has been renamed successfully!')
 	})
 }
 

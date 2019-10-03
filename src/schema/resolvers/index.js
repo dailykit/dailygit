@@ -185,9 +185,7 @@ const resolvers = {
 			if (fs.existsSync(args.oldPath)) {
 				return files
 					.renameFile(args.oldPath, args.newPath)
-					.then(response => {
-						return response
-					})
+					.then(response => response)
 					.catch(failure => failure)
 			}
 			return new Error('ENOENT')
