@@ -157,18 +157,17 @@ const renameFile = async (oldPath, newPath) => {
 			return resolve('File already exists!')
 		}
 
-		// Copy old file to renamed file
-		fs.copyFile(oldPath, newPath, async err => {
+		// Rename File
+		fs.rename(oldPath, newPath, async err => {
 			if (err) return reject(new Error(err))
-
-			// Delete the old file
-			await fs.unlinkSync(oldPath)
 
 			// Remove the old file from git index
 			await git
 				.remove({
 					dir: `${baseFolder}${getRepoPath(oldPath)}`,
-					filepath: path.basename(oldPath),
+					filepath: oldPath
+						.split(`${baseFolder}${getRepoPath(oldPath)}`)[1]
+						.slice(1),
 				})
 				.catch(error => reject(new Error(error)))
 
@@ -176,7 +175,9 @@ const renameFile = async (oldPath, newPath) => {
 			await git
 				.add({
 					dir: `${baseFolder}${getRepoPath(newPath)}`,
-					filepath: path.basename(newPath),
+					filepath: newPath
+						.split(`${baseFolder}${getRepoPath(oldPath)}`)[1]
+						.slice(1),
 				})
 				.catch(error => reject(new Error(error)))
 
