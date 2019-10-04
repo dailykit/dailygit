@@ -75,20 +75,24 @@ const resolvers = {
 				.searchFiles(args.path)
 				.then(data => data)
 				.catch(e => e),
-		getCommitLog: async () => {
-			const log = await git.log({
-				dir: baseFolder,
-				depth: 10,
-				ref: 'master',
-			})
-			return log
+		getCommitLog: (_, { path: repoDir }) => {
+			return git
+				.log({
+					dir: repoDir,
+					depth: 10,
+					ref: 'master',
+				})
+				.then(list => list)
+				.catch(error => new Error(error))
 		},
-		getCommit: async (_, { id }) => {
-			let { object: commit } = await git.readObject({
-				dir: baseFolder,
-				oid: id,
-			})
-			return commit
+		getCommit: (_, { id, path: repoDir }) => {
+			return git
+				.readObject({
+					dir: repoDir,
+					oid: id,
+				})
+				.then(({ object }) => object)
+				.catch(error => new Error(error))
 		},
 	},
 	Mutation: {
