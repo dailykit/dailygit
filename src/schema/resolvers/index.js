@@ -142,16 +142,12 @@ const resolvers = {
 			}
 			return new Error('ENOENT')
 		},
-		renameFolder: async (_, args) => {
+		renameFolder: (_, args) => {
 			if (fs.existsSync(args.oldPath)) {
-				return await files
-					.getAllFilesWithInFolder(args.oldPath)
-					.then(files => {
-						return folders
-							.renameFolder(args.oldPath, args.newPath)
-							.then(sucess => sucess)
-							.catch(failure => failure)
-					})
+				return folders
+					.renameFolder(args.oldPath, args.newPath)
+					.then(sucess => sucess)
+					.catch(failure => failure)
 			}
 			return new Error('ENOENT')
 		},

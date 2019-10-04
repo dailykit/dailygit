@@ -132,12 +132,64 @@ const deleteFolder = givenPath => {
 }
 
 const renameFolder = (oldPath, newPath) => {
-	return new Promise((resolve, reject) => {
-		fs.rename(oldPath, newPath, function(err) {
-			if (err) {
-				return reject(err)
+	return new Promise(async (resolve, reject) => {
+		// Check if newPath file exists
+		if (oldPath === newPath) {
+			return resolve("New name can't be the same old name!")
+		} else if (fs.existsSync(newPath)) {
+			return resolve('Folder already exists!')
+		}
+
+		// Get list of all file paths in before renaming folder
+		const oldFilePaths = await getPathsOfAllFilesInFolder(oldPath).then(
+			files => files
+		)
+		fs.rename(oldPath, newPath, async error => {
+			if (error) return reject(new Error(error))
+
+			// Get list of all file paths in renamed folder
+			const newFilePaths = await getPathsOfAllFilesInFolder(newPath).then(
+				files => files
+			)
+
+			// Remove all the old files from git index
+			for (let oldFilePath of oldFilePaths) {
+				git.remove({
+					dir: `${baseFolder}${getRepoPath(oldPath)}`,
+					filepath: oldFilePath
+						.split(`${baseFolder}${getRepoPath(oldPath)}`)[1]
+						.slice(1),
+				})
 			}
-			return resolve('Folder has been renamed successfully!')
+
+			// Add all the new files to staging and commit them
+			for (let newFilePath of newFilePaths) {
+				git.add({
+					dir: `${baseFolder}${getRepoPath(oldPath)}`,
+					filepath: newFilePath
+						.split(`${baseFolder}${getRepoPath(oldPath)}`)[1]
+						.slice(1),
+				})
+				git.commit({
+					dir: `${baseFolder}${getRepoPath(oldPath)}`,
+					author: {
+						name: 'placeholder',
+						email: 'placeholder@example.com',
+					},
+					commiter: {
+						name: 'placeholder',
+						email: 'placeholder@example.com',
+					},
+					message: `Renamed: Parent folder from ${path.basename(
+						oldPath
+					)} to ${path.basename(newPath)}`,
+				}).then(sha => console.log(sha))
+			}
+			resolve(
+				`Renamed: From ${path.basename(oldPath)} to ${path.basename(
+					newPath
+				)}`
+			)
 		})
 	})
 }
