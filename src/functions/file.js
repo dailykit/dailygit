@@ -6,6 +6,7 @@ const git = require('isomorphic-git')
 git.plugins.set('fs', fs)
 
 const { getRelFilePath, getRepoPath } = require('../utils/parsePath')
+const { stageChanges } = require('./git')
 
 const baseFolder = './../apps/'
 
@@ -16,18 +17,19 @@ const createFile = ({ path: givenPath, content }) => {
 			fs.mkdirSync(path.dirname(givenPath), { recursive: true })
 		}
 
+		const repoDir = `${baseFolder}${getRepoPath(givenPath)}`
+
 		// Create the file
 		fs.writeFileSync(givenPath, JSON.stringify(content, null, 2))
 
 		// Stage the file
-		git.add({
-			dir: `${baseFolder}${getRepoPath(givenPath)}`,
-			filepath: path.basename(givenPath),
-		}).catch(error => reject(new Error(error)))
+		stageChanges('add', repoDir, getRelFilePath(givenPath))
+			.then(result => console.log(result))
+			.catch(error => reject(new Error(error)))
 
 		// Commit the file
 		git.commit({
-			dir: `${baseFolder}${getRepoPath(givenPath)}`,
+			dir: repoDir,
 			author: {
 				name: 'placeholder',
 				email: 'placeholder@example.com',
@@ -47,29 +49,29 @@ const createFile = ({ path: givenPath, content }) => {
 
 const deleteFile = givenPath => {
 	return new Promise((resolve, reject) => {
-		// Remove the file from the git index
-		git.remove({
-			dir: `${baseFolder}${getRepoPath(givenPath)}`,
-			filepath: path.basename(givenPath),
-		}).catch(error => reject(new Error(error)))
-
-		// Commit the deleted file
-		git.commit({
-			dir: `${baseFolder}${getRepoPath(givenPath)}`,
-			author: {
-				name: 'placeholder',
-				email: 'placeholder@example.com',
-			},
-			commiter: {
-				name: 'placeholder',
-				email: 'placeholder@example.com',
-			},
-			message: `Deleted: ${path.basename(givenPath)}`,
-		})
+		const repoDir = `${baseFolder}${getRepoPath(givenPath)}`
 
 		// Delete the file
 		fs.unlink(givenPath, err => {
 			if (err) return reject(new Error(err))
+			// Remove the file from the git index
+			stageChanges('remove', repoDir, getRelFilePath(givenPath)).catch(
+				error => reject(new Error(error))
+			)
+
+			// Commit the deleted file
+			git.commit({
+				dir: repoDir,
+				author: {
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				},
+				commiter: {
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				},
+				message: `Deleted: ${path.basename(givenPath)}`,
+			})
 			return resolve(`Deleted: ${path.basename(givenPath)}`)
 		})
 	})
@@ -157,34 +159,26 @@ const renameFile = async (oldPath, newPath) => {
 			return resolve('File already exists!')
 		}
 
+		const repoDir = `${baseFolder}${getRepoPath(oldPath)}`
+
 		// Rename File
 		fs.rename(oldPath, newPath, async err => {
 			if (err) return reject(new Error(err))
 
 			// Remove the old file from git index
-			await git
-				.remove({
-					dir: `${baseFolder}${getRepoPath(oldPath)}`,
-					filepath: oldPath
-						.split(`${baseFolder}${getRepoPath(oldPath)}`)[1]
-						.slice(1),
-				})
-				.catch(error => reject(new Error(error)))
+			stageChanges('remove', repoDir, getRelFilePath(oldPath)).catch(
+				error => reject(new Error(error))
+			)
 
 			// Add the renamed file to staging
-			await git
-				.add({
-					dir: `${baseFolder}${getRepoPath(newPath)}`,
-					filepath: newPath
-						.split(`${baseFolder}${getRepoPath(oldPath)}`)[1]
-						.slice(1),
-				})
-				.catch(error => reject(new Error(error)))
+			stageChanges('add', repoDir, getRelFilePath(newPath)).catch(error =>
+				reject(new Error(error))
+			)
 
 			// Commit the staged files
 			await git
 				.commit({
-					dir: `${baseFolder}${getRepoPath(oldPath)}`,
+					dir: repoDir,
 					author: {
 						name: 'placeholder',
 						email: 'placeholder@example.com',

@@ -11,6 +11,7 @@ const files = require('./file')
 const getFolderSize = require('../utils/getFolderSize')
 
 const { getRelFilePath, getRepoPath } = require('../utils/parsePath')
+const { stageChanges } = require('./git')
 
 const baseFolder = './../apps/'
 
@@ -95,33 +96,30 @@ const deleteFolder = givenPath => {
 		const allFilePaths = await getPathsOfAllFilesInFolder(givenPath).then(
 			files => files
 		)
-
+		const repoDir = `${baseFolder}${getRepoPath(givenPath)}`
 		for (let file of allFilePaths) {
-			// Remove the file from the git index
-			git.remove({
-				dir: `${baseFolder}${getRepoPath(file)}`,
-				filepath: path.basename(file),
-			}).catch(error => reject(new Error(error)))
-
-			// Commit the deleted file
-			git.commit({
-				dir: `${baseFolder}${getRepoPath(file)}`,
-				author: {
-					name: 'placeholder',
-					email: 'placeholder@example.com',
-				},
-				commiter: {
-					name: 'placeholder',
-					email: 'placeholder@example.com',
-				},
-				message: `Deleted: ${path.basename(file)}`,
-			})
-				.then(sha => console.log({ sha }))
-				.catch(error => reject(new Error(error)))
-
-			// Delete the file
 			fs.unlink(file, err => {
 				if (err) return reject(new Error(err))
+				// Remove the file from the git index
+				stageChanges('remove', repoDir, getRelFilePath(file)).catch(
+					error => reject(new Error(error))
+				)
+
+				// Commit the deleted file
+				git.commit({
+					dir: repoDir,
+					author: {
+						name: 'placeholder',
+						email: 'placeholder@example.com',
+					},
+					commiter: {
+						name: 'placeholder',
+						email: 'placeholder@example.com',
+					},
+					message: `Deleted: ${path.basename(file)}`,
+				})
+					.then(sha => console.log({ sha }))
+					.catch(error => reject(new Error(error)))
 			})
 		}
 		rimraf(givenPath, err => {
@@ -151,25 +149,22 @@ const renameFolder = (oldPath, newPath) => {
 			const newFilePaths = await getPathsOfAllFilesInFolder(newPath).then(
 				files => files
 			)
+			const repoDir = `${baseFolder}${getRepoPath(oldPath)}`
 
 			// Remove all the old files from git index
 			for (let oldFilePath of oldFilePaths) {
-				git.remove({
-					dir: `${baseFolder}${getRepoPath(oldPath)}`,
-					filepath: oldFilePath
-						.split(`${baseFolder}${getRepoPath(oldPath)}`)[1]
-						.slice(1),
-				})
+				stageChanges(
+					'remove',
+					repoDir,
+					getRelFilePath(oldFilePath)
+				).catch(error => reject(new Error(error)))
 			}
 
 			// Add all the new files to staging and commit them
 			for (let newFilePath of newFilePaths) {
-				git.add({
-					dir: `${baseFolder}${getRepoPath(oldPath)}`,
-					filepath: newFilePath
-						.split(`${baseFolder}${getRepoPath(oldPath)}`)[1]
-						.slice(1),
-				})
+				stageChanges('add', repoDir, getRelFilePath(newFilePath)).catch(
+					error => reject(new Error(error))
+				)
 				git.commit({
 					dir: `${baseFolder}${getRepoPath(oldPath)}`,
 					author: {
