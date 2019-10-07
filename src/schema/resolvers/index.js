@@ -173,10 +173,8 @@ const resolvers = {
 		updateFile: async (_, args) => {
 			if (fs.existsSync(args.path)) {
 				return files
-					.updateFile(args.path, args.data)
-					.then(response => {
-						return response
-					})
+					.updateFile(args)
+					.then(response => response)
 					.catch(failure => failure)
 			}
 			return new Error('ENOENT')

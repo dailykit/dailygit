@@ -139,14 +139,37 @@ const searchFiles = async fileName => {
 	})
 }
 
-const updateFile = async (givenPath, data) => {
+const updateFile = async ({ path: givenPath, data, commitMessage }) => {
 	return new Promise((resolve, reject) => {
-		fs.writeFile(givenPath, data, function(err) {
-			if (err) {
-				return reject(err)
-			}
+		fs.writeFile(givenPath, data, async err => {
+			if (err) return reject(new Error(err))
+
+			const repoDir = `${baseFolder}${getRepoPath(givenPath)}`
+
+			// Add the updated file to staging
+			await stageChanges('add', repoDir, getRelFilePath(givenPath)).catch(
+				error => reject(new Error(error))
+			)
+
+			// Commit the staged files
+			await git
+				.commit({
+					dir: repoDir,
+					author: {
+						name: 'placeholder',
+						email: 'placeholder@example.com',
+					},
+					commiter: {
+						name: 'placeholder',
+						email: 'placeholder@example.com',
+					},
+					message: commitMessage,
+				})
+				.then(sha => console.log(sha))
+
+			// Resolve the promise
+			return resolve(`Updated: ${path.basename(givenPath)} file`)
 		})
-		resolve('File has been updated successfully!')
 	})
 }
 
