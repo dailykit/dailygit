@@ -9,6 +9,7 @@ const folders = require('../../functions/folder')
 const files = require('../../functions/file')
 
 const getFolderSize = require('../../utils/getFolderSize')
+
 const resolvers = {
 	FolderOrFile: {
 		__resolveType: obj => {
@@ -72,20 +73,24 @@ const resolvers = {
 				.searchFiles(args.path)
 				.then(data => data)
 				.catch(e => e),
-		getCommitLog: async () => {
-			const log = await git.log({
-				dir: baseFolder,
-				depth: 10,
-				ref: 'master',
-			})
-			return log
+		getCommitLog: (_, { path: repoDir }) => {
+			return git
+				.log({
+					dir: repoDir,
+					depth: 10,
+					ref: 'master',
+				})
+				.then(list => list)
+				.catch(error => new Error(error))
 		},
-		getCommit: async (_, { id }) => {
-			let { object: commit } = await git.readObject({
-				dir: baseFolder,
-				oid: id,
-			})
-			return commit
+		getCommit: (_, { id, path: repoDir }) => {
+			return git
+				.readObject({
+					dir: repoDir,
+					oid: id,
+				})
+				.then(({ object }) => object)
+				.catch(error => new Error(error))
 		},
 	},
 	Mutation: {
@@ -94,7 +99,7 @@ const resolvers = {
 			const paths = [appPath, `${appPath}/data`, `${appPath}/schema`]
 			const { schemas } = JSON.parse(args.schemas)
 
-			// Adsd Schema, Data Folder Paths
+			// Add Schema, Data Folder Paths
 			await schemas.map(folder => {
 				paths.push(`${appPath}/schema/${folder.path}`)
 				paths.push(`${appPath}/data/${folder.path}`)
@@ -105,8 +110,12 @@ const resolvers = {
 				folders.createFolder(path).then(() =>
 					schemas.map(folder =>
 						folder.entities.map(file => {
-							const folderPath = `${appPath}/schema/${folder.path}`
-							const filepath = `${folderPath}/${file.name}.json`
+							const folderPath = folderName =>
+								`${appPath}/${folderName}/${folder.path}`
+							git.init({ dir: folderPath('data') })
+							const filepath = `${folderPath('schema')}/${
+								file.name
+							}.json`
 							if (fs.existsSync(folderPath)) {
 								return fs.writeFile(
 									filepath,
@@ -126,81 +135,42 @@ const resolvers = {
 			if (fs.existsSync(args.path)) {
 				return 'Folder already exists!'
 			} else {
-				return folders.createFolder(args.path)
+				return folders
+					.createFolder(args.path)
+					.then(response => response)
+					.catch(failure => failure)
 			}
 		},
-		deleteFolder: async (_, args) => {
+		deleteFolder: (_, args) => {
 			if (fs.existsSync(args.path)) {
-				return await files
-					.getAllFilesWithInFolder(args.path)
-					.then(files => {
-						console.log(files)
-						folders.deleteFolder(args.path)
-						return 'Folder deleted successfully!'
-					})
+				return folders
+					.deleteFolder(args.path)
+					.then(response => response)
+					.catch(failure => failure)
 			}
 			return new Error('ENOENT')
 		},
-		renameFolder: async (_, args) => {
+		renameFolder: (_, args) => {
 			if (fs.existsSync(args.oldPath)) {
-				return await files
-					.getAllFilesWithInFolder(args.oldPath)
-					.then(files => {
-						console.log(files)
-						return folders
-							.renameFolder(args.oldPath, args.newPath)
-							.then(sucess => sucess)
-							.catch(failure => failure)
-					})
+				return folders
+					.renameFolder(args.oldPath, args.newPath)
+					.then(response => response)
+					.catch(failure => failure)
 			}
 			return new Error('ENOENT')
 		},
-		createFile: async (_, args) => {
+		createFile: (_, args) => {
 			if (fs.existsSync(args.path)) {
 				return 'File already exists!'
 			}
 			return files
-				.createFile(args.path, args.type)
-				.then(async response => {
-					await git.add({
-						dir: baseFolder,
-						filepath: args.path
-							.split('/')
-							.slice(2)
-							.join('/'),
-					})
-					await git.commit({
-						dir: baseFolder,
-						// TODO: Add the current user's name & email
-						author: {
-							name: 'Marky Mark',
-							email: 'markymark@example.com',
-						},
-						message: `Created file ${args.path.split('/').pop()}.`,
-					})
-					return response
-				})
+				.createFile(args)
+				.then(response => response)
 				.catch(failure => failure)
 		},
-		deleteFile: async (_, args) => {
+		deleteFile: (_, args) => {
 			if (fs.existsSync(args.path)) {
-				await git.remove({
-					dir: baseFolder,
-					filepath: args.path
-						.split('/')
-						.slice(2)
-						.join('/'),
-				})
-				await git.commit({
-					dir: baseFolder,
-					// TODO: Add the current user's name & email
-					author: {
-						name: 'Marky Mark',
-						email: 'markymark@example.com',
-					},
-					message: `Deleted file ${args.path.split('/').pop()}.`,
-				})
-				return await files
+				return files
 					.deleteFile(args.path)
 					.then(response => response)
 					.catch(failure => failure)
@@ -210,10 +180,8 @@ const resolvers = {
 		updateFile: async (_, args) => {
 			if (fs.existsSync(args.path)) {
 				return files
-					.updateFile(args.path, args.data)
-					.then(response => {
-						return response
-					})
+					.updateFile(args)
+					.then(response => response)
 					.catch(failure => failure)
 			}
 			return new Error('ENOENT')
@@ -222,9 +190,7 @@ const resolvers = {
 			if (fs.existsSync(args.oldPath)) {
 				return files
 					.renameFile(args.oldPath, args.newPath)
-					.then(response => {
-						return response
-					})
+					.then(response => response)
 					.catch(failure => failure)
 			}
 			return new Error('ENOENT')

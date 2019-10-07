@@ -2,26 +2,73 @@ const fs = require('fs')
 const path = require('path')
 const getFilesRecursively = require('recursive-readdir')
 
-const createFile = (givenPath, givenType) => {
+const git = require('isomorphic-git')
+git.plugins.set('fs', fs)
+
+const { getRelFilePath, repoDir } = require('../utils/parsePath')
+const { stageChanges } = require('./git')
+
+const createFile = ({ path: givenPath, content }) => {
 	return new Promise((resolve, reject) => {
-		let source = `./src/templates/${givenType}.json`
-		let destination = `./${givenPath.split('./')[1]}`
-		if (fs.existsSync(source)) {
-			fs.copyFile(source, destination, err => {
-				if (err) return reject(new Error('File could not be created!'))
-				return resolve('File created successfully!')
-			})
-		} else {
-			reject(new Error(`Template file ${givenType} doesn't exists!`))
+		// Check if folder exists
+		if (!fs.existsSync(path.dirname(givenPath))) {
+			fs.mkdirSync(path.dirname(givenPath), { recursive: true })
 		}
+
+		// Create the file
+		fs.writeFileSync(givenPath, JSON.stringify(content, null, 2))
+
+		// Stage the file
+		stageChanges('add', repoDir(givenPath), getRelFilePath(givenPath))
+			.then(result => console.log(result))
+			.catch(error => reject(new Error(error)))
+
+		// Commit the file
+		git.commit({
+			dir: repoDir(givenPath),
+			author: {
+				name: 'placeholder',
+				email: 'placeholder@example.com',
+			},
+			commiter: {
+				name: 'placeholder',
+				email: 'placeholder@example.com',
+			},
+			message: `Added: ${path.basename(givenPath)}`,
+		})
+			.then(sha => console.log({ sha }))
+			.catch(error => reject(new Error(error)))
+
+		return resolve(`Added: ${path.basename(givenPath)}`)
 	})
 }
 
 const deleteFile = givenPath => {
 	return new Promise((resolve, reject) => {
+		// Delete the file
 		fs.unlink(givenPath, err => {
-			if (err) return reject("File doesn't exist!")
-			return resolve('File deleted succesfully')
+			if (err) return reject(new Error(err))
+			// Remove the file from the git index
+			stageChanges(
+				'remove',
+				repoDir(givenPath),
+				getRelFilePath(givenPath)
+			).catch(error => reject(new Error(error)))
+
+			// Commit the deleted file
+			git.commit({
+				dir: repoDir(givenPath),
+				author: {
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				},
+				commiter: {
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				},
+				message: `Deleted: ${path.basename(givenPath)}`,
+			})
+			return resolve(`Deleted: ${path.basename(givenPath)}`)
 		})
 	})
 }
@@ -88,38 +135,93 @@ const searchFiles = async fileName => {
 	})
 }
 
-const getAllFilesWithInFolder = async givenPath => {
-	function ignoreFunc(file) {
-		return path.basename(file) === '.git'
-	}
+const updateFile = async args => {
+	const { path: givenPath, data, commitMessage, validatedFor } = args
 	return new Promise((resolve, reject) => {
-		getFilesRecursively(givenPath, [ignoreFunc], (err, files) => {
+		fs.writeFile(givenPath, data, async err => {
 			if (err) return reject(new Error(err))
-			const result = files.map(file => `./${file.split('\\').join('/')}`)
-			return resolve(result)
-		})
-	})
-}
 
-const updateFile = async (givenPath, data) => {
-	return new Promise((resolve, reject) => {
-		fs.writeFile(givenPath, data, function(err) {
-			if (err) {
-				return reject(err)
-			}
+			// Add the updated file to staging
+			await stageChanges(
+				'add',
+				repoDir(givenPath),
+				getRelFilePath(givenPath)
+			).catch(error => reject(new Error(error)))
+
+			// Commit the staged files
+			await git
+				.commit({
+					dir: repoDir(givenPath),
+					author: {
+						name: 'placeholder',
+						email: 'placeholder@example.com',
+					},
+					commiter: {
+						name: 'placeholder',
+						email: 'placeholder@example.com',
+					},
+					message: commitMessage,
+				})
+				.then(sha => console.log(sha))
+
+			// Resolve the promise
+			return resolve(`Updated: ${path.basename(givenPath)} file`)
 		})
-		resolve('File has been updated successfully!')
 	})
 }
 
 const renameFile = async (oldPath, newPath) => {
 	return new Promise((resolve, reject) => {
-		fs.rename(oldPath, newPath, function(err) {
-			if (err) {
-				return reject(err)
-			}
+		// Check if newPath file exists
+		if (oldPath === newPath) {
+			return resolve("New name can't be the same old name!")
+		} else if (fs.existsSync(newPath)) {
+			return resolve('File already exists!')
+		}
+
+		// Rename File
+		fs.rename(oldPath, newPath, async err => {
+			if (err) return reject(new Error(err))
+
+			// Remove the old file from git index
+			stageChanges(
+				'remove',
+				repoDir(oldPath),
+				getRelFilePath(oldPath)
+			).catch(error => reject(new Error(error)))
+
+			// Add the renamed file to staging
+			stageChanges(
+				'add',
+				repoDir(oldPath),
+				getRelFilePath(newPath)
+			).catch(error => reject(new Error(error)))
+
+			// Commit the staged files
+			await git
+				.commit({
+					dir: repoDir(oldPath),
+					author: {
+						name: 'placeholder',
+						email: 'placeholder@example.com',
+					},
+					commiter: {
+						name: 'placeholder',
+						email: 'placeholder@example.com',
+					},
+					message: `Renamed: ${path.basename(
+						oldPath
+					)} file to ${path.basename(newPath)}`,
+				})
+				.then(sha => console.log(sha))
+
+			// Resolve the promise
+			return resolve(
+				`Renamed: ${path.basename(oldPath)} file to ${path.basename(
+					newPath
+				)}`
+			)
 		})
-		resolve('File has been renamed successfully!')
 	})
 }
 
@@ -130,5 +232,4 @@ module.exports = {
 	updateFile,
 	renameFile,
 	searchFiles,
-	getAllFilesWithInFolder,
 }

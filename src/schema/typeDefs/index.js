@@ -60,8 +60,8 @@ const typeDefs = gql`
 		getNestedFolders(path: String): Folder
 		getFile(path: String!): File
 		searchFiles(path: String!): SearchFilesList
-		getCommitLog: [Commit]
-		getCommit(id: String!): Commit
+		getCommitLog(path: String!): [Commit]
+		getCommit(id: String!, path: String!): Commit
 	}
 `
 
