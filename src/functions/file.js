@@ -135,7 +135,8 @@ const searchFiles = async fileName => {
 	})
 }
 
-const updateFile = async ({ path: givenPath, data, commitMessage }) => {
+const updateFile = async args => {
+	const { path: givenPath, data, commitMessage, validatedFor } = args
 	return new Promise((resolve, reject) => {
 		fs.writeFile(givenPath, data, async err => {
 			if (err) return reject(new Error(err))
