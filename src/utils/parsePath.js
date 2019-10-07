@@ -16,7 +16,10 @@ const getRelFilePath = givenPath =>
 		.slice(3)
 		.join('/')
 
+const repoDir = givenPath => `${baseFolder}${getRepoPath(givenPath)}`
+
 module.exports = {
 	getRelFilePath,
 	getRepoPath,
+	repoDir,
 }

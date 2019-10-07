@@ -10,7 +10,7 @@ git.plugins.set('fs', fs)
 const files = require('./file')
 const getFolderSize = require('../utils/getFolderSize')
 
-const { getRelFilePath, getRepoPath } = require('../utils/parsePath')
+const { getRelFilePath, repoDir } = require('../utils/parsePath')
 const { stageChanges } = require('./git')
 
 const baseFolder = './../apps/'
@@ -90,19 +90,21 @@ const deleteFolder = givenPath => {
 		const allFilePaths = await getPathsOfAllFilesInFolder(givenPath).then(
 			files => files
 		)
-		const repoDir = `${baseFolder}${getRepoPath(givenPath)}`
+
 		// Delete the folder
 		rimraf(givenPath, error => {
 			if (error) return reject(new Error(error))
 			for (let file of allFilePaths) {
 				// Remove files from git index
-				stageChanges('remove', repoDir, getRelFilePath(file)).catch(
-					error => reject(new Error(error))
-				)
+				stageChanges(
+					'remove',
+					repoDir(givenPath),
+					getRelFilePath(file)
+				).catch(error => reject(new Error(error)))
 
 				// Commit the deleted files
 				git.commit({
-					dir: repoDir,
+					dir: repoDir(givenPath),
 					author: {
 						name: 'placeholder',
 						email: 'placeholder@example.com',
@@ -139,24 +141,25 @@ const renameFolder = (oldPath, newPath) => {
 			const newFilePaths = await getPathsOfAllFilesInFolder(newPath).then(
 				files => files
 			)
-			const repoDir = `${baseFolder}${getRepoPath(oldPath)}`
 
 			// Remove all the old files from git index
 			for (let oldFilePath of oldFilePaths) {
 				stageChanges(
 					'remove',
-					repoDir,
+					repoDir(oldPath),
 					getRelFilePath(oldFilePath)
 				).catch(error => reject(new Error(error)))
 			}
 
 			// Add all the new files to staging and commit them
 			for (let newFilePath of newFilePaths) {
-				stageChanges('add', repoDir, getRelFilePath(newFilePath)).catch(
-					error => reject(new Error(error))
-				)
+				stageChanges(
+					'add',
+					repoDir(oldPath),
+					getRelFilePath(newFilePath)
+				).catch(error => reject(new Error(error)))
 				git.commit({
-					dir: `${baseFolder}${getRepoPath(oldPath)}`,
+					dir: repoDir(oldPath),
 					author: {
 						name: 'placeholder',
 						email: 'placeholder@example.com',
