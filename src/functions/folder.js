@@ -91,29 +91,29 @@ const deleteFolder = givenPath => {
 			files => files
 		)
 		const repoDir = `${baseFolder}${getRepoPath(givenPath)}`
-		for (let file of allFilePaths) {
-			fs.unlink(file, err => {
-				if (err) return reject(new Error(err))
-				// Remove the file from the git index
+		// Delete the folder
+		rimraf(givenPath, error => {
+			if (error) return reject(new Error(error))
+			for (let file of allFilePaths) {
+				// Remove files from git index
 				stageChanges('remove', repoDir, getRelFilePath(file)).catch(
 					error => reject(new Error(error))
 				)
 
-				// Commit the deleted file
+				// Commit the deleted files
 				git.commit({
 					dir: repoDir,
+					author: {
+						name: 'placeholder',
+						email: 'placeholder@example.com',
+					},
 					commiter: {
 						name: 'placeholder',
 						email: 'placeholder@example.com',
 					},
-					message: `Deleted: ${path.basename(file)}`,
-				})
-					.then(sha => console.log({ sha }))
-					.catch(error => reject(new Error(error)))
-			})
-		}
-		rimraf(givenPath, error => {
-			if (error) return reject(new Error(error))
+					message: `Deleted: File ${path.basename(file)}`,
+				}).then(sha => console.log(sha))
+			}
 			return resolve(`Deleted : ${path.basename(givenPath)} folder`)
 		})
 	})
