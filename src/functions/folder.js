@@ -75,18 +75,12 @@ const getFolderWithFiles = async url => {
 	}
 }
 
-const createFolder = async url => {
+const createFolder = givenPath => {
 	return new Promise((resolve, reject) => {
-		fs.mkdir(
-			url,
-			{
-				recursive: true,
-			},
-			err => {
-				if (err) return reject(err)
-				return resolve('Folder created successfuly!')
-			}
-		)
+		fs.mkdir(givenPath, error => {
+			if (error) return reject(new Error(error))
+			return resolve(`Created: ${path.basename(givenPath)} Folder!`)
+		})
 	})
 }
 
@@ -108,10 +102,6 @@ const deleteFolder = givenPath => {
 				// Commit the deleted file
 				git.commit({
 					dir: repoDir,
-					author: {
-						name: 'placeholder',
-						email: 'placeholder@example.com',
-					},
 					commiter: {
 						name: 'placeholder',
 						email: 'placeholder@example.com',
@@ -122,9 +112,9 @@ const deleteFolder = givenPath => {
 					.catch(error => reject(new Error(error)))
 			})
 		}
-		rimraf(givenPath, err => {
-			if (err) return err
-			resolve(`Deleted : ${path.basename(givenPath)} folder`)
+		rimraf(givenPath, error => {
+			if (error) return reject(new Error(error))
+			return resolve(`Deleted : ${path.basename(givenPath)} folder`)
 		})
 	})
 }

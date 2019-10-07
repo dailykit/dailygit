@@ -10,8 +10,6 @@ const files = require('../../functions/file')
 
 const getFolderSize = require('../../utils/getFolderSize')
 
-const baseFolder = './../apps'
-
 const resolvers = {
 	FolderOrFile: {
 		__resolveType: obj => {
@@ -137,12 +135,18 @@ const resolvers = {
 			if (fs.existsSync(args.path)) {
 				return 'Folder already exists!'
 			} else {
-				return folders.createFolder(args.path)
+				return folders
+					.createFolder(args.path)
+					.then(response => response)
+					.catch(failure => failure)
 			}
 		},
 		deleteFolder: (_, args) => {
 			if (fs.existsSync(args.path)) {
-				return folders.deleteFolder(args.path).then(resp => resp)
+				return folders
+					.deleteFolder(args.path)
+					.then(response => response)
+					.catch(failure => failure)
 			}
 			return new Error('ENOENT')
 		},
@@ -150,7 +154,7 @@ const resolvers = {
 			if (fs.existsSync(args.oldPath)) {
 				return folders
 					.renameFolder(args.oldPath, args.newPath)
-					.then(sucess => sucess)
+					.then(response => response)
 					.catch(failure => failure)
 			}
 			return new Error('ENOENT')
@@ -159,13 +163,16 @@ const resolvers = {
 			if (fs.existsSync(args.path)) {
 				return 'File already exists!'
 			}
-			return files.createFile(args).then(resp => resp)
+			return files
+				.createFile(args)
+				.then(response => response)
+				.catch(failure => failure)
 		},
 		deleteFile: (_, args) => {
 			if (fs.existsSync(args.path)) {
 				return files
 					.deleteFile(args.path)
-					.then(resp => resp)
+					.then(response => response)
 					.catch(failure => failure)
 			}
 			return new Error('ENOENT')
