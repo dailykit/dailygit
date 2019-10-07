@@ -62,10 +62,6 @@ const deleteFile = givenPath => {
 			// Commit the deleted file
 			git.commit({
 				dir: repoDir,
-				author: {
-					name: 'placeholder',
-					email: 'placeholder@example.com',
-				},
 				commiter: {
 					name: 'placeholder',
 					email: 'placeholder@example.com',
@@ -155,10 +151,6 @@ const updateFile = async ({ path: givenPath, data, commitMessage }) => {
 			await git
 				.commit({
 					dir: repoDir,
-					author: {
-						name: 'placeholder',
-						email: 'placeholder@example.com',
-					},
 					commiter: {
 						name: 'placeholder',
 						email: 'placeholder@example.com',
@@ -202,10 +194,6 @@ const renameFile = async (oldPath, newPath) => {
 			await git
 				.commit({
 					dir: repoDir,
-					author: {
-						name: 'placeholder',
-						email: 'placeholder@example.com',
-					},
 					commiter: {
 						name: 'placeholder',
 						email: 'placeholder@example.com',
