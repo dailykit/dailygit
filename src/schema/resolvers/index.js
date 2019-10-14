@@ -11,10 +11,10 @@ const files = require('../../functions/file')
 const getFolderSize = require('../../utils/getFolderSize')
 
 const resolvers = {
-	FolderOrFile: {
+	Result: {
 		__resolveType: obj => {
-			if (obj.children) return 'Folder'
-			if (obj.content) return 'File'
+			if (obj.error) return 'Error'
+			if (obj.message) return 'Success'
 			return null
 		},
 	},
@@ -96,104 +96,191 @@ const resolvers = {
 	Mutation: {
 		installApp: async (_, args) => {
 			const appPath = `./../apps/${args.name}`
-			const paths = [appPath, `${appPath}/data`, `${appPath}/schema`]
+			const dataFolders = []
+			const schemaFolders = []
 			const { schemas } = JSON.parse(args.schemas)
 
 			// Add Schema, Data Folder Paths
 			await schemas.map(folder => {
-				paths.push(`${appPath}/schema/${folder.path}`)
-				paths.push(`${appPath}/data/${folder.path}`)
+				schemaFolders.push(`${appPath}/schema/${folder.path}`)
+				dataFolders.push(`${appPath}/data/${folder.path}`)
 			})
 
+			// Create data folders and initialize git
+			await dataFolders.map(path =>
+				folders
+					.createFolder(path)
+					.then(() => git.init({ dir: path }))
+					.catch(error => ({
+						success: false,
+						error: new Error(error),
+					}))
+			)
+
+			const folderPath = (folderName, folderPath) =>
+				`${appPath}/${folderName}/${folderPath}`
+
 			// Create Folders with Schema Entity Files
-			await paths.map(path =>
-				folders.createFolder(path).then(() =>
-					schemas.map(folder =>
-						folder.entities.map(file => {
-							const folderPath = folderName =>
-								`${appPath}/${folderName}/${folder.path}`
-							git.init({ dir: folderPath('data') })
-							const filepath = `${folderPath('schema')}/${
-								file.name
-							}.json`
-							if (fs.existsSync(folderPath)) {
+			await schemaFolders.map(path =>
+				folders
+					.createFolder(path)
+					.then(() => {
+						return schemas.map(folder => {
+							return folder.entities.map(file => {
+								const filepath = `${folderPath(
+									'schema',
+									folder.path
+								)}/${file.name}.json`
 								return fs.writeFile(
 									filepath,
 									JSON.stringify(file.content, null, 2),
-									err => {
-										if (err) return new Error(err)
+									error => {
+										if (error)
+											return {
+												success: false,
+												error: new Error(error),
+											}
 									}
 								)
-							}
+							})
 						})
-					)
-				)
+					})
+					.catch(error => ({
+						success: false,
+						error: new Error(error),
+					}))
 			)
-			return 'App installed!'
+			return {
+				success: true,
+				message: `App ${args.name} is installed!`,
+			}
 		},
 		createFolder: (_, args) => {
 			if (fs.existsSync(args.path)) {
-				return 'Folder already exists!'
+				return {
+					success: false,
+					error: `Folder ${path.basename(args.path)} already exists!`,
+				}
 			} else {
 				return folders
 					.createFolder(args.path)
-					.then(response => response)
-					.catch(failure => failure)
+					.then(response => ({
+						success: true,
+						message: response,
+					}))
+					.catch(failure => ({
+						success: false,
+						error: new Error(failure),
+					}))
 			}
 		},
 		deleteFolder: (_, args) => {
 			if (fs.existsSync(args.path)) {
 				return folders
 					.deleteFolder(args.path)
-					.then(response => response)
-					.catch(failure => failure)
+					.then(response => ({
+						success: true,
+						message: response,
+					}))
+					.catch(failure => ({
+						success: false,
+						error: new Error(failure),
+					}))
 			}
-			return new Error('ENOENT')
+			return {
+				success: false,
+				error: `Folder ${path.basename(args.path)} doesn't exists!`,
+			}
 		},
 		renameFolder: (_, args) => {
 			if (fs.existsSync(args.oldPath)) {
 				return folders
 					.renameFolder(args.oldPath, args.newPath)
-					.then(response => response)
-					.catch(failure => failure)
+					.then(response => ({
+						success: true,
+						message: response,
+					}))
+					.catch(failure => ({
+						success: false,
+						error: new Error(failure),
+					}))
 			}
-			return new Error('ENOENT')
+			return {
+				success: false,
+				error: `Folder ${path.basename(args.oldPath)} doesn't exists!`,
+			}
 		},
 		createFile: (_, args) => {
 			if (fs.existsSync(args.path)) {
-				return 'File already exists!'
+				return {
+					success: false,
+					error: `File ${path.basename(args.path)} already exists!`,
+				}
 			}
 			return files
 				.createFile(args)
-				.then(response => response)
-				.catch(failure => failure)
+				.then(response => ({
+					success: true,
+					message: response,
+				}))
+				.catch(failure => ({
+					success: false,
+					error: new Error(failure),
+				}))
 		},
 		deleteFile: (_, args) => {
 			if (fs.existsSync(args.path)) {
 				return files
 					.deleteFile(args.path)
-					.then(response => response)
-					.catch(failure => failure)
+					.then(response => ({
+						success: true,
+						message: response,
+					}))
+					.catch(failure => ({
+						success: false,
+						error: new Error(failure),
+					}))
 			}
-			return new Error('ENOENT')
+			return {
+				success: false,
+				error: `File ${path.basename(args.path)} doesn't exists!`,
+			}
 		},
 		updateFile: async (_, args) => {
 			if (fs.existsSync(args.path)) {
 				return files
 					.updateFile(args)
-					.then(response => response)
-					.catch(failure => failure)
+					.then(response => ({
+						success: true,
+						message: response,
+					}))
+					.catch(failure => ({
+						success: false,
+						error: new Error(failure),
+					}))
 			}
-			return new Error('ENOENT')
+			return {
+				success: false,
+				error: `File ${path.basename(args.path)} doesn't exists!`,
+			}
 		},
 		renameFile: async (_, args) => {
 			if (fs.existsSync(args.oldPath)) {
 				return files
 					.renameFile(args.oldPath, args.newPath)
-					.then(response => response)
-					.catch(failure => failure)
+					.then(response => ({
+						success: true,
+						message: response,
+					}))
+					.catch(failure => ({
+						success: false,
+						error: new Error(failure),
+					}))
 			}
-			return new Error('ENOENT')
+			return {
+				success: false,
+				error: `File ${path.basename(args.oldPath)} doesn't exists!`,
+			}
 		},
 	},
 }

@@ -1,12 +1,13 @@
 const fs = require('fs')
 const path = require('path')
 const getFilesRecursively = require('recursive-readdir')
-
 const git = require('isomorphic-git')
 git.plugins.set('fs', fs)
 
+const database = require('./database')
+
 const { getRelFilePath, repoDir } = require('../utils/parsePath')
-const { stageChanges } = require('./git')
+const { stageChanges, commitToBranch, gitCommit } = require('./git')
 
 const createFile = ({ path: givenPath, content }) => {
 	return new Promise((resolve, reject) => {
@@ -14,32 +15,43 @@ const createFile = ({ path: givenPath, content }) => {
 		if (!fs.existsSync(path.dirname(givenPath))) {
 			fs.mkdirSync(path.dirname(givenPath), { recursive: true })
 		}
-
 		// Create the file
 		fs.writeFileSync(givenPath, JSON.stringify(content, null, 2))
 
 		// Stage the file
-		stageChanges('add', repoDir(givenPath), getRelFilePath(givenPath))
-			.then(result => console.log(result))
-			.catch(error => reject(new Error(error)))
+		stageChanges(
+			'add',
+			repoDir(givenPath),
+			getRelFilePath(givenPath)
+		).catch(error => reject(new Error(error)))
 
 		// Commit the file
-		git.commit({
-			dir: repoDir(givenPath),
-			author: {
+		return gitCommit(
+			givenPath,
+			{
 				name: 'placeholder',
 				email: 'placeholder@example.com',
 			},
-			commiter: {
+			{
 				name: 'placeholder',
 				email: 'placeholder@example.com',
 			},
-			message: `Added: ${path.basename(givenPath)}`,
-		})
-			.then(sha => console.log({ sha }))
-			.catch(error => reject(new Error(error)))
+			`Added: ${path.basename(givenPath)}`
+		)
+			.then(sha => {
+				const fields = {
+					name: path.basename(givenPath),
+					path: givenPath,
+					commits: [sha],
+				}
 
-		return resolve(`Added: ${path.basename(givenPath)}`)
+				// Add the file to db document
+				return database
+					.createDoc(fields)
+					.then(() => resolve(`Added: ${path.basename(givenPath)}`))
+					.catch(error => reject(new Error(error)))
+			})
+			.catch(error => reject(new Error(error)))
 	})
 }
 
@@ -56,19 +68,23 @@ const deleteFile = givenPath => {
 			).catch(error => reject(new Error(error)))
 
 			// Commit the deleted file
-			git.commit({
-				dir: repoDir(givenPath),
-				author: {
+			return gitCommit(
+				givenPath,
+				{
 					name: 'placeholder',
 					email: 'placeholder@example.com',
 				},
-				commiter: {
+				{
 					name: 'placeholder',
 					email: 'placeholder@example.com',
 				},
-				message: `Deleted: ${path.basename(givenPath)}`,
-			})
-			return resolve(`Deleted: ${path.basename(givenPath)}`)
+				`Deleted: ${path.basename(givenPath)}`
+			).then(() =>
+				database
+					.deleteDoc(givenPath)
+					.then(() => resolve(`Deleted: ${path.basename(givenPath)}`))
+					.catch(error => reject(new Error(error)))
+			)
 		})
 	})
 }
@@ -77,16 +93,23 @@ const getFile = givenPath => {
 	return new Promise((resolve, reject) => {
 		const stats = fs.statSync(givenPath)
 		const parse = path.parse(givenPath)
-		fs.readFile(givenPath, (err, data) => {
-			if (err) reject(err)
-			resolve({
-				name: parse.name,
-				path: givenPath,
-				size: stats.size,
-				createdAt: stats.birthtime,
-				type: 'file',
-				content: data.toString(),
-			})
+		fs.readFile(givenPath, (error, data) => {
+			if (error) reject(new Error(error))
+			return database
+				.readDoc(givenPath)
+				.then(doc => {
+					const file = {
+						name: parse.name,
+						path: givenPath,
+						size: stats.size,
+						createdAt: stats.birthtime,
+						type: 'file',
+						content: data.toString(),
+						commits: doc.commits,
+					}
+					return resolve(file)
+				})
+				.catch(error => reject(new Error(error)))
 		})
 	})
 }
@@ -149,23 +172,41 @@ const updateFile = async args => {
 			).catch(error => reject(new Error(error)))
 
 			// Commit the staged files
-			await git
-				.commit({
-					dir: repoDir(givenPath),
-					author: {
-						name: 'placeholder',
-						email: 'placeholder@example.com',
-					},
-					commiter: {
-						name: 'placeholder',
-						email: 'placeholder@example.com',
-					},
-					message: commitMessage,
+			return gitCommit(
+				givenPath,
+				{
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				},
+				{
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				},
+				commitMessage
+			)
+				.then(sha => {
+					commitToBranch(
+						validatedFor,
+						sha,
+						givenPath,
+						{
+							name: 'placeholder',
+							email: 'placeholder@example.com',
+						},
+						{
+							name: 'placeholder',
+							email: 'placeholder@example.com',
+						}
+					)
 				})
-				.then(sha => console.log(sha))
-
-			// Resolve the promise
-			return resolve(`Updated: ${path.basename(givenPath)} file`)
+				.then(sha =>
+					database
+						.updateDoc({ commit: sha, path: givenPath })
+						.then(() =>
+							resolve(`Updated: ${path.basename(givenPath)} file`)
+						)
+						.catch(error => reject(new Error(error)))
+				)
 		})
 	})
 }
@@ -198,28 +239,30 @@ const renameFile = async (oldPath, newPath) => {
 			).catch(error => reject(new Error(error)))
 
 			// Commit the staged files
-			await git
-				.commit({
-					dir: repoDir(oldPath),
-					author: {
-						name: 'placeholder',
-						email: 'placeholder@example.com',
-					},
-					commiter: {
-						name: 'placeholder',
-						email: 'placeholder@example.com',
-					},
-					message: `Renamed: ${path.basename(
-						oldPath
-					)} file to ${path.basename(newPath)}`,
-				})
-				.then(sha => console.log(sha))
-
-			// Resolve the promise
-			return resolve(
+			return gitCommit(
+				oldPath,
+				{
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				},
+				{
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				},
 				`Renamed: ${path.basename(oldPath)} file to ${path.basename(
 					newPath
 				)}`
+			).then(sha =>
+				database
+					.updateDoc({ commit: sha, path: oldPath, newPath })
+					.then(() =>
+						resolve(
+							`Renamed: ${path.basename(
+								oldPath
+							)} file to ${path.basename(newPath)}`
+						)
+					)
+					.catch(error => reject(new Error(error)))
 			)
 		})
 	})

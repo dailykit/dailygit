@@ -10,15 +10,18 @@ git.plugins.set('fs', fs)
 const files = require('./file')
 const getFolderSize = require('../utils/getFolderSize')
 
+const database = require('./database')
+
 const { getRelFilePath, repoDir } = require('../utils/parsePath')
 const { stageChanges } = require('./git')
-
-const baseFolder = './../apps/'
 
 const getNestedFolders = async url => {
 	let content = await fs.readdirSync(url)
 	let folders = content.filter(
-		item => fs.statSync(`${url}/${item}`).isDirectory() && item[0] !== '.'
+		item =>
+			fs.statSync(`${url}/${item}`).isDirectory() &&
+			item[0] !== '.' &&
+			item !== 'schema'
 	)
 	let nestedData = folders.map(async folder => {
 		const stats = fs.statSync(`${url}/${folder}`)
@@ -44,7 +47,7 @@ const getFolderWithFiles = async url => {
 	try {
 		let data = await fs.readdirSync(url)
 		let nestedData = data
-			.filter(item => item[0] !== '.')
+			.filter(item => item[0] !== '.' && item !== 'schema')
 			.map(async item => {
 				const stats = fs.statSync(`${url}/${item}`)
 				let node = {}
@@ -77,7 +80,10 @@ const getFolderWithFiles = async url => {
 
 const createFolder = givenPath => {
 	return new Promise((resolve, reject) => {
-		fs.mkdir(givenPath, error => {
+		if (fs.existsSync(givenPath)) {
+			return reject(`Folder ${path.basename(givenPath)}  already exist!`)
+		}
+		return fs.mkdir(givenPath, { recursive: true }, error => {
 			if (error) return reject(new Error(error))
 			return resolve(`Created: ${path.basename(givenPath)} Folder!`)
 		})
@@ -114,9 +120,13 @@ const deleteFolder = givenPath => {
 						email: 'placeholder@example.com',
 					},
 					message: `Deleted: File ${path.basename(file)}`,
-				}).then(sha => console.log(sha))
+				}).then(sha =>
+					database
+						.deleteDoc(file)
+						.catch(error => reject(new Error(error)))
+				)
 			}
-			return resolve(`Deleted : ${path.basename(givenPath)} folder`)
+			resolve(`Deleted : ${path.basename(givenPath)} folder`)
 		})
 	})
 }
@@ -171,7 +181,16 @@ const renameFolder = (oldPath, newPath) => {
 					message: `Renamed: Parent folder from ${path.basename(
 						oldPath
 					)} to ${path.basename(newPath)}`,
-				}).then(sha => console.log(sha))
+				}).then(sha =>
+					database
+						.updateDoc({
+							commit: sha,
+							path:
+								oldFilePaths[newFilePaths.indexOf(newFilePath)],
+							newPath: newFilePath,
+						})
+						.catch(error => reject(new Error(error)))
+				)
 			}
 			resolve(
 				`Renamed: From ${path.basename(oldPath)} to ${path.basename(
