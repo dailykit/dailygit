@@ -6,7 +6,7 @@ git.plugins.set('fs', fs)
 
 const database = require('./database')
 
-const { getRelFilePath, repoDir } = require('../utils/parsePath')
+const { getRelFilePath, repoDir, getAppName } = require('../utils/parsePath')
 const { stageChanges, commitToBranch, gitCommit } = require('./git')
 
 const createFile = ({ path: givenPath, content }) => {
@@ -116,44 +116,31 @@ const getFile = givenPath => {
 
 const searchFiles = async fileName => {
 	function ignoreFunc(file) {
-		return path.basename(file) === '.git'
+		return (
+			path.basename(file) === '.git' || path.basename(file) === 'schema'
+		)
 	}
 	return new Promise((resolve, reject) => {
 		getFilesRecursively('./../apps', [ignoreFunc], (err, files) => {
 			if (err) return reject(new Error(err))
-			const formatted = files
-				.map(file => `./${file.split('\\').join('/')}`)
+			const paths = files
+				.map(file => `./${file.replace(/\\/g, '/')}`)
 				.filter(file =>
 					path
 						.basename(file)
 						.toLowerCase()
 						.includes(fileName.toLowerCase())
 				)
-			const result = {
-				menus: [],
-				packages: [],
-				ingredients: [],
-				recipes: [],
-				dishes: [],
-			}
-			formatted.map(file => {
-				const type = file.split('/')[2].toLowerCase()
-				switch (type) {
-					case 'dishes':
-						return result.dishes.push(file)
-					case 'packages':
-						return result.packages.push(file)
-					case 'recipes':
-						return result.recipes.push(file)
-					case 'ingredients':
-						return result.ingredients.push(file)
-					case 'menus':
-						return result.menus.push(file)
-					default:
-						break
-				}
+			const apps = {}
+			paths.forEach(path => {
+				let key = getAppName(path)
+				apps[key] = []
 			})
-			return resolve(result)
+			paths.forEach(path => {
+				let key = getAppName(path)
+				apps[key] = [...apps[key], path]
+			})
+			return resolve(JSON.stringify(apps))
 		})
 	})
 }

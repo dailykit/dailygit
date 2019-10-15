@@ -47,13 +47,6 @@ const typeDefs = gql`
 		author: Author
 		committer: Committer
 	}
-	type SearchFilesList {
-		menus: [String]
-		packages: [String]
-		ingredients: [String]
-		recipes: [String]
-		dishes: [String]
-	}
 	union Result = Success | Error
 	type Success {
 		success: Boolean
@@ -67,7 +60,7 @@ const typeDefs = gql`
 		getFolderWithFiles(path: String): FolderWithFiles
 		getNestedFolders(path: String): Folder
 		getFile(path: String!): File
-		searchFiles(path: String!): SearchFilesList
+		searchFiles(fileName: String!): String
 		getCommitLog(path: String!): [Commit]
 		getCommits(path: String!, commits: [String]!): [Commit]
 		getCommit(id: String!, path: String!): Commit

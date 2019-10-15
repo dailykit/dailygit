@@ -70,7 +70,7 @@ const resolvers = {
 		},
 		searchFiles: (_, args) =>
 			files
-				.searchFiles(args.path)
+				.searchFiles(args.fileName)
 				.then(data => data)
 				.catch(e => e),
 		getCommitLog: (_, { path: repoDir }) => {
