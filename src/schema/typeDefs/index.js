@@ -69,6 +69,7 @@ const typeDefs = gql`
 		getFile(path: String!): File
 		searchFiles(path: String!): SearchFilesList
 		getCommitLog(path: String!): [Commit]
+		getCommits(path: String!, commits: [String]!): [Commit]
 		getCommit(id: String!, path: String!): Commit
 	}
 `

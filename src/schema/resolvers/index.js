@@ -92,6 +92,18 @@ const resolvers = {
 				.then(({ object }) => object)
 				.catch(error => new Error(error))
 		},
+		getCommits: async (_, { path, commits }) => {
+			const results = await commits.map(commit =>
+				git
+					.readObject({
+						dir: path,
+						oid: commit,
+					})
+					.then(({ object }) => object)
+					.catch(error => new Error(error))
+			)
+			return Promise.all(results).then(data => data)
+		},
 	},
 	Mutation: {
 		installApp: async (_, args) => {
