@@ -41,7 +41,6 @@ const typeDefs = gql`
 	}
 
 	type Commit {
-		oid: String
 		message: String
 		tree: String
 		parent: [String]
