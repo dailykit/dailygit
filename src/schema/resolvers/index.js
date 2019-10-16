@@ -9,6 +9,7 @@ const folders = require('../../functions/folder')
 const files = require('../../functions/file')
 
 const getFolderSize = require('../../utils/getFolderSize')
+const { getRelFilePath, repoDir } = require('../../utils/parsePath')
 
 const resolvers = {
 	Result: {
@@ -103,6 +104,17 @@ const resolvers = {
 					.catch(error => new Error(error))
 			)
 			return Promise.all(results).then(data => data)
+		},
+		getCommitContent: (_, { id, path }) => {
+			return git
+				.readObject({
+					dir: repoDir(path),
+					oid: id,
+					filepath: getRelFilePath(path),
+					encoding: 'utf8',
+				})
+				.then(({ object }) => object)
+				.catch(error => new Error(error))
 		},
 	},
 	Mutation: {

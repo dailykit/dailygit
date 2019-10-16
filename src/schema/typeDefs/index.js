@@ -64,6 +64,7 @@ const typeDefs = gql`
 		getCommitLog(path: String!): [Commit]
 		getCommits(path: String!, commits: [String]!): [Commit]
 		getCommit(id: String!, path: String!): Commit
+		getCommitContent(id: String!, path: String!): String
 	}
 `
 
