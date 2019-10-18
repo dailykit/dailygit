@@ -159,41 +159,45 @@ const updateFile = async args => {
 			).catch(error => reject(new Error(error)))
 
 			// Commit the staged files
-			return gitCommit(
-				givenPath,
-				{
-					name: 'placeholder',
-					email: 'placeholder@example.com',
-				},
-				{
-					name: 'placeholder',
-					email: 'placeholder@example.com',
-				},
-				commitMessage
-			)
-				.then(sha => {
-					commitToBranch(
-						validatedFor,
-						sha,
-						givenPath,
-						{
-							name: 'placeholder',
-							email: 'placeholder@example.com',
-						},
-						{
-							name: 'placeholder',
-							email: 'placeholder@example.com',
-						}
-					)
-				})
-				.then(sha =>
-					database
-						.updateDoc({ commit: sha, path: givenPath })
-						.then(() =>
-							resolve(`Updated: ${path.basename(givenPath)} file`)
-						)
-						.catch(error => reject(new Error(error)))
+			return (
+				gitCommit(
+					givenPath,
+					{
+						name: 'placeholder',
+						email: 'placeholder@example.com',
+					},
+					{
+						name: 'placeholder',
+						email: 'placeholder@example.com',
+					},
+					commitMessage
 				)
+					// .then(sha => {
+					// 	commitToBranch(
+					// 		validatedFor,
+					// 		sha,
+					// 		givenPath,
+					// 		{
+					// 			name: 'placeholder',
+					// 			email: 'placeholder@example.com',
+					// 		},
+					// 		{
+					// 			name: 'placeholder',
+					// 			email: 'placeholder@example.com',
+					// 		}
+					// 	)
+					// })
+					.then(sha =>
+						database
+							.updateDoc({ commit: sha, path: givenPath })
+							.then(() =>
+								resolve(
+									`Updated: ${path.basename(givenPath)} file`
+								)
+							)
+							.catch(error => reject(new Error(error)))
+					)
+			)
 		})
 	})
 }

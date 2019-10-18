@@ -20,7 +20,7 @@ const getNestedFolders = async url => {
 	let folders = content.filter(
 		item =>
 			fs.statSync(`${url}/${item}`).isDirectory() &&
-			item[0] !== '.' &&
+			item !== '.git' &&
 			item !== 'schema'
 	)
 	let nestedData = folders.map(async folder => {
@@ -47,7 +47,7 @@ const getFolderWithFiles = async url => {
 	try {
 		let data = await fs.readdirSync(url)
 		let nestedData = data
-			.filter(item => item[0] !== '.' && item !== 'schema')
+			.filter(item => item !== '.git' && item !== 'schema')
 			.map(async item => {
 				const stats = fs.statSync(`${url}/${item}`)
 				let node = {}
