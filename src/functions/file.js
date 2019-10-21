@@ -172,21 +172,21 @@ const updateFile = async args => {
 					},
 					commitMessage
 				)
-					// .then(sha => {
-					// 	commitToBranch(
-					// 		validatedFor,
-					// 		sha,
-					// 		givenPath,
-					// 		{
-					// 			name: 'placeholder',
-					// 			email: 'placeholder@example.com',
-					// 		},
-					// 		{
-					// 			name: 'placeholder',
-					// 			email: 'placeholder@example.com',
-					// 		}
-					// 	)
-					// })
+					.then(sha => {
+						commitToBranch(
+							validatedFor,
+							sha,
+							givenPath,
+							{
+								name: 'placeholder',
+								email: 'placeholder@example.com',
+							},
+							{
+								name: 'placeholder',
+								email: 'placeholder@example.com',
+							}
+						)
+					})
 					.then(sha =>
 						database
 							.updateDoc({ commit: sha, path: givenPath })
