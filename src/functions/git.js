@@ -79,21 +79,9 @@ const cherryPickCommit = (sha, givenPath) => {
 
 const checkoutBranch = (branch, givenPath) => {
 	return new Promise((resolve, reject) => {
-		// const pathArray = givenPath.split('/')
-		// const dataIndex = pathArray.indexOf('data') + 1
-		// while (pathArray.length == dataIndex + 1) {
-		// 	pathArray.pop()
-		// }
-		// console.log(pathArray)
-
-		// const repoPath = pathArray.join('/')
-		// console.log(repoPath)
 
 		const pathArray = givenPath.split('/')
 		const dataIndex = pathArray.indexOf('data') + 1
-		// while (pathArray.length > dataIndex + 1) {
-		// 	pathArray.pop()
-		// }
 		let newArray = [];
 		for (let i = 0; i < dataIndex + 1; i++) {
 			newArray.push(pathArray[i])
@@ -120,7 +108,7 @@ const checkoutBranch = (branch, givenPath) => {
 			})
 			.catch(error => reject(new Error(error)))
 			.done(() => resolve())
-		return resolve()
+		resolve()
 	})
 }
 
@@ -159,22 +147,37 @@ const doesBranchExists = (branch_name, givenPath) => {
 
 const commitToBranch = (validFor, sha, givenPath, author, committer) => {
 	validFor.forEach(branch => {
-		doesBranchExists(branch, givenPath);
-		checkoutBranch(branch, givenPath).then(() => {
-			cherryPickCommit(sha, givenPath).then(() => {
-				gitCommit(
-					givenPath,
-					author,
-					committer,
-					`Updated: ${path.basename(
-						givenPath
-					)} file in branch ${branch}...`
-				)
+		// doesBranchExists(branch, givenPath);
+		// checkoutBranch(branch, givenPath).then(() => {
+		console.log(branch)
+		nodegit.Repository.open(repoPath)
+			.then(repo => {
+				repo.checkoutBranch(branch, { checkoutStrategy: nodegit.Checkout.STRATEGY.FORCE })
+					.then(() => {
+						cherryPickCommit(sha, givenPath).then(() => {
+							gitCommit(
+								givenPath,
+								author,
+								committer,
+								`Updated: ${path.basename(
+									givenPath
+								)} file in branch ${branch}...`
+							)
+								.then(() => {
+									repo.checkoutBranch("master", { checkoutStrategy: nodegit.Checkout.STRATEGY.FORCE })
+									.then(()=>{
+										console.log("Successfull")
+									})
+									.catch(error => reject(new Error(error)))
+								})
+								.catch(error => reject(new Error(error)))
+						})
+						.catch(error => reject(new Error(error)))
+
+					})
+					.catch(error => reject(new Error(error)))
 			})
-				.then(() => {
-					checkoutBranch("master", givenPath);
-				})
-		})
+			.catch(error => reject(new Error(error)))
 	})
 }
 
