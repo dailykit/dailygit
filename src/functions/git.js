@@ -46,7 +46,7 @@ const cherryPickCommit = (sha, givenPath) => {
 		// 	pathArray.pop()
 		// }
 		let newArray = [];
-		for(let i=0; i<dataIndex+1 ; i++){
+		for (let i = 0; i < dataIndex + 1; i++) {
 			newArray.push(pathArray[i])
 		}
 		let repoPath = newArray.join('/')
@@ -68,7 +68,7 @@ const cherryPickCommit = (sha, givenPath) => {
 						commit,
 						cherrypickOptions
 					)
-						.then(int => {})
+						.then(int => { })
 						.catch(error => reject(new Error(error)))
 				})
 			})
@@ -95,7 +95,7 @@ const checkoutBranch = (branch, givenPath) => {
 		// 	pathArray.pop()
 		// }
 		let newArray = [];
-		for(let i=0; i<dataIndex+1 ; i++){
+		for (let i = 0; i < dataIndex + 1; i++) {
 			newArray.push(pathArray[i])
 		}
 		let repoPath = newArray.join('/')
@@ -128,7 +128,7 @@ const doesBranchExists = (branch_name, givenPath) => {
 	const pathArray = givenPath.split('/')
 	const dataIndex = pathArray.indexOf('data') + 1
 	let newArray = [];
-	for(let i=0; i<dataIndex+1 ; i++){
+	for (let i = 0; i < dataIndex + 1; i++) {
 		newArray.push(pathArray[i])
 	}
 	let repoPath = newArray.join('/')
@@ -136,25 +136,25 @@ const doesBranchExists = (branch_name, givenPath) => {
 	console.log(repoPath)
 
 	nodegit.Repository.open(repoPath)
-	.then(repo => {
-		nodegit.Branch.lookup(repo, branch_name, 1).then(function(reference) {
-			// Use reference
-			console.log(reference)
-			if(!reference) {
-				console.log("Branch Doesn't exist")
-			} else {
-				console.log("Branch exists")
-			}
-			nodegit.Branch.name(reference).then(function(newString) {
-				console.log(newString)
-				if(!newString){
-					console.log("nothing")
+		.then(repo => {
+			nodegit.Branch.lookup(repo, branch_name, 1).then(function (reference) {
+				// Use reference
+				console.log(reference)
+				if (!reference) {
+					console.log("Branch Doesn't exist")
+				} else {
+					console.log("Branch exists")
 				}
-			  });
-		  })
-		  .catch(error => reject(new Error(error)))
-	})
-	.catch(error => reject(new Error(error)))
+				nodegit.Branch.name(reference).then(function (newString) {
+					console.log(newString)
+					if (!newString) {
+						console.log("nothing")
+					}
+				});
+			})
+				.catch(error => reject(new Error(error)))
+		})
+		.catch(error => reject(new Error(error)))
 }
 
 const commitToBranch = (validFor, sha, givenPath, author, committer) => {
@@ -171,9 +171,9 @@ const commitToBranch = (validFor, sha, givenPath, author, committer) => {
 					)} file in branch ${branch}...`
 				)
 			})
-			.then(() => {
-				checkoutBranch("master", givenPath);
-			})
+				.then(() => {
+					checkoutBranch("master", givenPath);
+				})
 		})
 	})
 }
