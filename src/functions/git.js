@@ -171,6 +171,9 @@ const commitToBranch = (validFor, sha, givenPath, author, committer) => {
 					)} file in branch ${branch}...`
 				)
 			})
+			.then(() => {
+				checkoutBranch("master", givenPath);
+			})
 		})
 	})
 }
