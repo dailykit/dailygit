@@ -176,6 +176,14 @@ const updateFile = async args => {
 				},
 				commitMessage
 			)
+				.then(sha =>
+					database
+						.updateDoc({ commit: sha, path: givenPath })
+						.then(() =>
+							resolve(`Updated: ${path.basename(givenPath)} file`)
+						)
+						.catch(error => reject(new Error(error)))
+				)
 				.then(sha => {
 					commitToBranch(
 						validatedFor,
@@ -191,14 +199,6 @@ const updateFile = async args => {
 						}
 					)
 				})
-				.then(sha =>
-					database
-						.updateDoc({ commit: sha, path: givenPath })
-						.then(() =>
-							resolve(`Updated: ${path.basename(givenPath)} file`)
-						)
-						.catch(error => reject(new Error(error)))
-				)
 		})
 	})
 }
