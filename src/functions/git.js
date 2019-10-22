@@ -3,7 +3,7 @@ const git = require('isomorphic-git')
 const path = require('path')
 
 const nodegit = require('nodegit')
-const { CherrypickOptions, MergeOptions } = require('nodegit')
+const { CherrypickOptions, MergeOptions, Branch } = require('nodegit')
 
 git.plugins.set('fs', fs)
 
@@ -42,12 +42,14 @@ const cherryPickCommit = (sha, givenPath) => {
 	return new Promise((resolve, reject) => {
 		const pathArray = givenPath.split('/')
 		const dataIndex = pathArray.indexOf('data') + 1
-		while (pathArray.length > dataIndex + 1) {
-			pathArray.pop()
-		}
 
-		let repoPath = pathArray.join('/')
+		let newArray = [];
+		for (let i = 0; i < dataIndex + 1; i++) {
+			newArray.push(pathArray[i])
+		}
+		let repoPath = newArray.join('/')
 		repoPath += '/'
+		console.log(repoPath)
 
 		nodegit.Repository.open(repoPath)
 			.then(repo => {
@@ -64,7 +66,7 @@ const cherryPickCommit = (sha, givenPath) => {
 						commit,
 						cherrypickOptions
 					)
-						.then(int => {})
+						.then(int => { })
 						.catch(error => reject(new Error(error)))
 				})
 			})
@@ -77,49 +79,79 @@ const checkoutBranch = (branch, givenPath) => {
 	return new Promise((resolve, reject) => {
 		const pathArray = givenPath.split('/')
 		const dataIndex = pathArray.indexOf('data') + 1
-		while (pathArray.length == dataIndex + 1) {
-			pathArray.pop()
+		let newArray = [];
+		for (let i = 0; i < dataIndex + 1; i++) {
+			newArray.push(pathArray[i])
 		}
-
-		const repoPath = pathArray.join('/')
-
+		let repoPath = newArray.join('/')
+		repoPath += '/'
+		console.log(repoPath)
 		nodegit.Repository.open(repoPath)
 			.then(repo => {
-				return repo
-					.getCurrentBranch()
-					.then(() => {
-						const checkoutOpts = {
-							checkoutStrategy: nodegit.Checkout.STRATEGY.FORCE,
-						}
-						return repo.checkoutBranch(branch, checkoutOpts)
-					})
-					.then(() => {
-						return repo.getCurrentBranch().then(ref => {
-							// ref.shorthand()
-							// ref.target()
-						})
-					})
+				return repo.checkoutBranch(branch,  {
+					checkoutStrategy: nodegit.Checkout.STRATEGY.FORCE,
+				})
+				.then(()=>{
+					resolve()
+				})
 			})
 			.catch(error => reject(new Error(error)))
-			.done(() => resolve())
-		return resolve()
 	})
 }
 
+const doesBranchExists = (branch_name, givenPath) => {
+	const pathArray = givenPath.split('/')
+	const dataIndex = pathArray.indexOf('data') + 1
+	let newArray = [];
+	for (let i = 0; i < dataIndex + 1; i++) {
+		newArray.push(pathArray[i])
+	}
+	let repoPath = newArray.join('/')
+	repoPath += '/'
+	console.log(repoPath)
+
+	nodegit.Repository.open(repoPath)
+		.then(repo => {
+			nodegit.Branch.lookup(repo, branch_name, 1).then(function (reference) {
+				// Use reference
+				console.log(reference)
+				if (!reference) {
+					console.log("Branch Doesn't exist")
+				} else {
+					console.log("Branch exists")
+				}
+				nodegit.Branch.name(reference).then(function (newString) {
+					console.log(newString)
+					if (!newString) {
+						console.log("nothing")
+					}
+				});
+			})
+				.catch(error => reject(new Error(error)))
+		})
+		.catch(error => reject(new Error(error)))
+}
+
 const commitToBranch = (validFor, sha, givenPath, author, committer) => {
-	validFor.forEach(branch => {
-		checkoutBranch(branch, givenPath).then(() => {
-			cherryPickCommit(sha, givenPath).then(() => {
-				gitCommit(
-					givenPath,
-					author,
-					committer,
-					`Updated: ${path.basename(
-						givenPath
-					)} file in branch ${branch}`
-				)
+	return new Promise((resolve, reject) => {
+		validFor.forEach(branch => {
+			checkoutBranch(branch, givenPath).then(() => {
+				cherryPickCommit(sha, givenPath).then(() => {
+					gitCommit(
+						givenPath,
+						author,
+						committer,
+						`Updated: ${path.basename(
+							givenPath
+						)} file in branch ${branch}...`
+					)
+					.then(() => {
+						checkoutBranch("master", givenPath);
+					})
+				})
 			})
 		})
+		resolve()
 	})
 }
 

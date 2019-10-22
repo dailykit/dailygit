@@ -7,7 +7,7 @@ git.plugins.set('fs', fs)
 const database = require('./database')
 
 const { getRelFilePath, repoDir, getAppName } = require('../utils/parsePath')
-const { stageChanges, commitToBranch, gitCommit } = require('./git')
+const { stageChanges, commitToBranch, gitCommit, checkoutBranch } = require('./git')
 
 const createFile = ({ path: givenPath, content }) => {
 	return new Promise((resolve, reject) => {
@@ -172,21 +172,21 @@ const updateFile = async args => {
 					},
 					commitMessage
 				)
-					// .then(sha => {
-					// 	commitToBranch(
-					// 		validatedFor,
-					// 		sha,
-					// 		givenPath,
-					// 		{
-					// 			name: 'placeholder',
-					// 			email: 'placeholder@example.com',
-					// 		},
-					// 		{
-					// 			name: 'placeholder',
-					// 			email: 'placeholder@example.com',
-					// 		}
-					// 	)
-					// })
+					.then(sha => {
+						commitToBranch(
+							validatedFor,
+							sha,
+							givenPath,
+							{
+								name: 'placeholder',
+								email: 'placeholder@example.com',
+							},
+							{
+								name: 'placeholder',
+								email: 'placeholder@example.com',
+							}
+						)
+					})
 					.then(sha =>
 						database
 							.updateDoc({ commit: sha, path: givenPath })
@@ -199,6 +199,7 @@ const updateFile = async args => {
 					)
 			)
 		})
+		// })
 	})
 }
 
