@@ -42,9 +42,7 @@ const cherryPickCommit = (sha, givenPath) => {
 	return new Promise((resolve, reject) => {
 		const pathArray = givenPath.split('/')
 		const dataIndex = pathArray.indexOf('data') + 1
-		// while (pathArray.length > dataIndex + 1) {
-		// 	pathArray.pop()
-		// }
+
 		let newArray = [];
 		for (let i = 0; i < dataIndex + 1; i++) {
 			newArray.push(pathArray[i])
@@ -79,7 +77,6 @@ const cherryPickCommit = (sha, givenPath) => {
 
 const checkoutBranch = (branch, givenPath) => {
 	return new Promise((resolve, reject) => {
-
 		const pathArray = givenPath.split('/')
 		const dataIndex = pathArray.indexOf('data') + 1
 		let newArray = [];
@@ -91,24 +88,14 @@ const checkoutBranch = (branch, givenPath) => {
 		console.log(repoPath)
 		nodegit.Repository.open(repoPath)
 			.then(repo => {
-				return repo
-					.getCurrentBranch()
-					.then(() => {
-						const checkoutOpts = {
-							checkoutStrategy: nodegit.Checkout.STRATEGY.FORCE,
-						}
-						return repo.checkoutBranch(branch, checkoutOpts)
-					})
-					.then(() => {
-						return repo.getCurrentBranch().then(ref => {
-							// ref.shorthand()
-							// ref.target()
-						})
-					})
+				return repo.checkoutBranch(branch,  {
+					checkoutStrategy: nodegit.Checkout.STRATEGY.FORCE,
+				})
+				.then(()=>{
+					resolve()
+				})
 			})
 			.catch(error => reject(new Error(error)))
-			.done(() => resolve())
-		resolve()
 	})
 }
 
@@ -146,38 +133,25 @@ const doesBranchExists = (branch_name, givenPath) => {
 }
 
 const commitToBranch = (validFor, sha, givenPath, author, committer) => {
-	validFor.forEach(branch => {
-		// doesBranchExists(branch, givenPath);
-		// checkoutBranch(branch, givenPath).then(() => {
-		console.log(branch)
-		nodegit.Repository.open(repoPath)
-			.then(repo => {
-				repo.checkoutBranch(branch, { checkoutStrategy: nodegit.Checkout.STRATEGY.FORCE })
+	return new Promise((resolve, reject) => {
+		validFor.forEach(branch => {
+			checkoutBranch(branch, givenPath).then(() => {
+				cherryPickCommit(sha, givenPath).then(() => {
+					gitCommit(
+						givenPath,
+						author,
+						committer,
+						`Updated: ${path.basename(
+							givenPath
+						)} file in branch ${branch}...`
+					)
 					.then(() => {
-						cherryPickCommit(sha, givenPath).then(() => {
-							gitCommit(
-								givenPath,
-								author,
-								committer,
-								`Updated: ${path.basename(
-									givenPath
-								)} file in branch ${branch}...`
-							)
-								.then(() => {
-									repo.checkoutBranch("master", { checkoutStrategy: nodegit.Checkout.STRATEGY.FORCE })
-									.then(()=>{
-										console.log("Successfull")
-									})
-									.catch(error => reject(new Error(error)))
-								})
-								.catch(error => reject(new Error(error)))
-						})
-						.catch(error => reject(new Error(error)))
-
+						checkoutBranch("master", givenPath);
 					})
-					.catch(error => reject(new Error(error)))
+				})
 			})
-			.catch(error => reject(new Error(error)))
+		})
+		resolve()
 	})
 }
 
