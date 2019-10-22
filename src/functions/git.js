@@ -88,12 +88,12 @@ const checkoutBranch = (branch, givenPath) => {
 		console.log(repoPath)
 		nodegit.Repository.open(repoPath)
 			.then(repo => {
-				return repo.checkoutBranch(branch,  {
+				return repo.checkoutBranch(branch, {
 					checkoutStrategy: nodegit.Checkout.STRATEGY.FORCE,
 				})
-				.then(()=>{
-					resolve()
-				})
+					.then(() => {
+						resolve()
+					})
 			})
 			.catch(error => reject(new Error(error)))
 	})
@@ -133,25 +133,22 @@ const doesBranchExists = (branch_name, givenPath) => {
 }
 
 const commitToBranch = (validFor, sha, givenPath, author, committer) => {
-	return new Promise((resolve, reject) => {
-		validFor.forEach(branch => {
-			checkoutBranch(branch, givenPath).then(() => {
-				cherryPickCommit(sha, givenPath).then(() => {
-					gitCommit(
-						givenPath,
-						author,
-						committer,
-						`Updated: ${path.basename(
-							givenPath
-						)} file in branch ${branch}...`
-					)
+	validFor.forEach(branch => {
+		checkoutBranch(branch, givenPath).then(() => {
+			cherryPickCommit(sha, givenPath).then(() => {
+				gitCommit(
+					givenPath,
+					author,
+					committer,
+					`Updated: ${path.basename(
+						givenPath
+					)} file in branch ${branch}...`
+				)
 					.then(() => {
 						checkoutBranch("master", givenPath);
 					})
-				})
 			})
 		})
-		resolve()
 	})
 }
 
