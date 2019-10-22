@@ -13,6 +13,7 @@ const mutations = gql`
 			commitMessage: String!
 			validatedFor: [String]!
 		): Result
+		draftFile(path: String!, data: String!): Result
 		renameFile(oldPath: String!, newPath: String!): Result
 		installApp(name: String!, schemas: String): Result
 	}

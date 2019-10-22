@@ -7,7 +7,12 @@ git.plugins.set('fs', fs)
 const database = require('./database')
 
 const { getRelFilePath, repoDir, getAppName } = require('../utils/parsePath')
-const { stageChanges, commitToBranch, gitCommit, checkoutBranch } = require('./git')
+const {
+	stageChanges,
+	commitToBranch,
+	gitCommit,
+	checkoutBranch,
+} = require('./git')
 
 const createFile = ({ path: givenPath, content }) => {
 	return new Promise((resolve, reject) => {
@@ -159,47 +164,52 @@ const updateFile = async args => {
 			).catch(error => reject(new Error(error)))
 
 			// Commit the staged files
-			return (
-				gitCommit(
-					givenPath,
-					{
-						name: 'placeholder',
-						email: 'placeholder@example.com',
-					},
-					{
-						name: 'placeholder',
-						email: 'placeholder@example.com',
-					},
-					commitMessage
-				)
-					.then(sha => {
-						commitToBranch(
-							validatedFor,
-							sha,
-							givenPath,
-							{
-								name: 'placeholder',
-								email: 'placeholder@example.com',
-							},
-							{
-								name: 'placeholder',
-								email: 'placeholder@example.com',
-							}
-						)
-					})
-					.then(sha =>
-						database
-							.updateDoc({ commit: sha, path: givenPath })
-							.then(() =>
-								resolve(
-									`Updated: ${path.basename(givenPath)} file`
-								)
-							)
-							.catch(error => reject(new Error(error)))
-					)
+			return gitCommit(
+				givenPath,
+				{
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				},
+				{
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				},
+				commitMessage
 			)
+				.then(sha => {
+					commitToBranch(
+						validatedFor,
+						sha,
+						givenPath,
+						{
+							name: 'placeholder',
+							email: 'placeholder@example.com',
+						},
+						{
+							name: 'placeholder',
+							email: 'placeholder@example.com',
+						}
+					)
+				})
+				.then(sha =>
+					database
+						.updateDoc({ commit: sha, path: givenPath })
+						.then(() =>
+							resolve(`Updated: ${path.basename(givenPath)} file`)
+						)
+						.catch(error => reject(new Error(error)))
+				)
 		})
-		// })
+	})
+}
+
+const draftFile = async args => {
+	const { path: givenPath, data } = args
+	return new Promise((resolve, reject) => {
+		fs.writeFile(givenPath, data, async err => {
+			if (err) return reject(new Error(err))
+			return resolve(`File ${path.basename(givenPath)} has been saved!`)
+		})
 	})
 }
 
@@ -267,4 +277,5 @@ module.exports = {
 	updateFile,
 	renameFile,
 	searchFiles,
+	draftFile,
 }
