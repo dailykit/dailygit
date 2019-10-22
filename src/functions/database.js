@@ -96,6 +96,9 @@ const updateDoc = fields => {
 						...(fields.commit && {
 							commits: [fields.commit, ...file.commits],
 						}),
+						...(fields.lastSaved && {
+							lastSaved: fields.lastSaved,
+						}),
 						updatedAt: Date.now(),
 					}
 					return Model.findByIdAndUpdate(

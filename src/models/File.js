@@ -12,6 +12,7 @@ const fileSchema = new Schema(
 			required: true,
 		},
 		commits: [String],
+		lastSaved: String,
 	},
 	{ timestamps: true }
 )

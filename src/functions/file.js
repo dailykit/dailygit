@@ -111,6 +111,7 @@ const getFile = givenPath => {
 						type: 'file',
 						content: data.toString(),
 						commits: doc.commits,
+						lastSaved: doc.lastSaved,
 					}
 					return resolve(file)
 				})
@@ -208,7 +209,11 @@ const draftFile = async args => {
 	return new Promise((resolve, reject) => {
 		fs.writeFile(givenPath, data, async err => {
 			if (err) return reject(new Error(err))
-			return resolve(`File ${path.basename(givenPath)} has been saved!`)
+			return database
+				.updateDoc({ path: givenPath, lastSaved: Date.now() })
+				.then(() =>
+					resolve(`File ${path.basename(givenPath)} has been saved!`)
+				)
 		})
 	})
 }
