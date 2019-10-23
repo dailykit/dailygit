@@ -3,6 +3,8 @@ const path = require('path')
 
 const fileSchema = require('../models/File')
 
+const App = require('../models/App')
+
 const { getAppName, getRepoName } = require('../utils/parsePath')
 
 const connectToDB = dbName => {
@@ -146,9 +148,29 @@ const readDoc = path => {
 	})
 }
 
+const createApp = (name, entities) => {
+	return new Promise((resolve, reject) => {
+		return connectToDB('apps').then(() => {
+			const app = new App({
+				name: name,
+				dependents: [],
+				status: 'active',
+				entities: entities,
+			})
+
+			// Save file as document
+			return app.save((error, result) => {
+				if (error) return reject(new Error(error))
+				return resolve(`App ${name} has been saved!`)
+			})
+		})
+	})
+}
+
 module.exports = {
 	createDoc,
 	deleteDoc,
 	updateDoc,
 	readDoc,
+	createApp,
 }

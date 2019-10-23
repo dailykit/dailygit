@@ -7,6 +7,7 @@ git.plugins.set('fs', fs)
 
 const folders = require('../../functions/folder')
 const files = require('../../functions/file')
+const database = require('../../functions/database')
 
 const getFolderSize = require('../../utils/getFolderSize')
 const { getRelFilePath, repoDir } = require('../../utils/parsePath')
@@ -199,6 +200,10 @@ const resolvers = {
 						success: false,
 						error: new Error(error),
 					}))
+			)
+			await database.createApp(
+				args.name,
+				schemas.map(schema => schema.path)
 			)
 			return {
 				success: true,
