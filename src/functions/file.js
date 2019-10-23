@@ -7,12 +7,7 @@ git.plugins.set('fs', fs)
 const database = require('./database')
 
 const { getRelFilePath, repoDir, getAppName } = require('../utils/parsePath')
-const {
-	stageChanges,
-	commitToBranch,
-	gitCommit,
-	checkoutBranch,
-} = require('./git')
+const { stageChanges, commitToBranch, gitCommit } = require('./git')
 
 const createFile = ({ path: givenPath, content }) => {
 	return new Promise((resolve, reject) => {
@@ -52,7 +47,7 @@ const createFile = ({ path: givenPath, content }) => {
 
 				// Add the file to db document
 				return database
-					.createDoc(fields)
+					.createFile(fields)
 					.then(() => resolve(`Added: ${path.basename(givenPath)}`))
 					.catch(error => reject(new Error(error)))
 			})
@@ -86,7 +81,7 @@ const deleteFile = givenPath => {
 				`Deleted: ${path.basename(givenPath)}`
 			).then(() =>
 				database
-					.deleteDoc(givenPath)
+					.deleteFile(givenPath)
 					.then(() => resolve(`Deleted: ${path.basename(givenPath)}`))
 					.catch(error => reject(new Error(error)))
 			)
@@ -101,7 +96,7 @@ const getFile = givenPath => {
 		fs.readFile(givenPath, (error, data) => {
 			if (error) reject(new Error(error))
 			return database
-				.readDoc(givenPath)
+				.readFile(givenPath)
 				.then(doc => {
 					const file = {
 						name: parse.name,
@@ -179,7 +174,7 @@ const updateFile = async args => {
 			)
 				.then(sha =>
 					database
-						.updateDoc({ commit: sha, path: givenPath })
+						.updateFile({ commit: sha, path: givenPath })
 						.then(() =>
 							resolve(`Updated: ${path.basename(givenPath)} file`)
 						)
@@ -210,7 +205,7 @@ const draftFile = async args => {
 		fs.writeFile(givenPath, data, async err => {
 			if (err) return reject(new Error(err))
 			return database
-				.updateDoc({ path: givenPath, lastSaved: Date.now() })
+				.updateFile({ path: givenPath, lastSaved: Date.now() })
 				.then(() =>
 					resolve(`File ${path.basename(givenPath)} has been saved!`)
 				)
@@ -261,7 +256,7 @@ const renameFile = async (oldPath, newPath) => {
 				)}`
 			).then(sha =>
 				database
-					.updateDoc({ commit: sha, path: oldPath, newPath })
+					.updateFile({ commit: sha, path: oldPath, newPath })
 					.then(() =>
 						resolve(
 							`Renamed: ${path.basename(

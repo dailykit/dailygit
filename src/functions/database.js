@@ -21,7 +21,7 @@ const connectToDB = dbName => {
 	})
 }
 // Create file document
-const createDoc = fields => {
+const createFile = fields => {
 	return new Promise((resolve, reject) => {
 		// Connect to database
 		const dbName = getAppName(fields.path)
@@ -40,7 +40,7 @@ const createDoc = fields => {
 	})
 }
 
-const deleteDoc = givenPath => {
+const deleteFile = givenPath => {
 	return new Promise((resolve, reject) => {
 		// Connect to database
 		const dbName = getAppName(givenPath)
@@ -71,7 +71,7 @@ const deleteDoc = givenPath => {
 	})
 }
 
-const updateDoc = fields => {
+const updateFile = fields => {
 	return new Promise((resolve, reject) => {
 		// Connect to database
 		const dbName = getAppName(fields.path)
@@ -124,7 +124,7 @@ const updateDoc = fields => {
 	})
 }
 
-const readDoc = path => {
+const readFile = path => {
 	return new Promise((resolve, reject) => {
 		// Connect to database
 		const dbName = getAppName(path)
@@ -168,9 +168,9 @@ const createApp = (name, entities) => {
 }
 
 module.exports = {
-	createDoc,
-	deleteDoc,
-	updateDoc,
-	readDoc,
+	createFile,
+	deleteFile,
+	updateFile,
+	readFile,
 	createApp,
 }
