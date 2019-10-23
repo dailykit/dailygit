@@ -122,20 +122,26 @@ const resolvers = {
 				.then(({ object }) => object)
 				.catch(error => new Error(error))
 		},
-		showFilesInBranch:  ( _, {branchName, appName, entity}) => {
-			return checkoutBranch(branchName, "./../apps/" + appName + "/data/" + entity)
-			.then(() => {
-				return resolvers.Query.getFolderWithFiles('', {path : "./../apps/" + appName + "/data/" + entity})
+		showFilesInBranch: (_, { branchName, appName, entity }) => {
+			return checkoutBranch(
+				branchName,
+				'./../apps/' + appName + '/data/' + entity
+			)
+				.then(() => {
+					return resolvers.Query.getFolderWithFiles('', {
+						path: './../apps/' + appName + '/data/' + entity,
+					}).then(data => {
+						return data
+					})
+				})
 				.then(data => {
+					checkoutBranch(
+						'master',
+						'./../apps/' + appName + '/data/' + entity
+					)
 					return data
 				})
-			})
-			.then((data)=> {
-				checkoutBranch("master", "./../apps/" + appName + "/data/" + entity)
-				return data
-			})
-			
-		} 
+		},
 	},
 	Mutation: {
 		installApp: async (_, args) => {

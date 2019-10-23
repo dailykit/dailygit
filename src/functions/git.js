@@ -43,7 +43,7 @@ const cherryPickCommit = (sha, givenPath) => {
 		const pathArray = givenPath.split('/')
 		const dataIndex = pathArray.indexOf('data') + 1
 
-		let newArray = [];
+		let newArray = []
 		for (let i = 0; i < dataIndex + 1; i++) {
 			newArray.push(pathArray[i])
 		}
@@ -66,7 +66,7 @@ const cherryPickCommit = (sha, givenPath) => {
 						commit,
 						cherrypickOptions
 					)
-						.then(int => { })
+						.then(int => {})
 						.catch(error => reject(new Error(error)))
 				})
 			})
@@ -79,7 +79,7 @@ const checkoutBranch = (branch, givenPath) => {
 	return new Promise((resolve, reject) => {
 		const pathArray = givenPath.split('/')
 		const dataIndex = pathArray.indexOf('data') + 1
-		let newArray = [];
+		let newArray = []
 		for (let i = 0; i < dataIndex + 1; i++) {
 			newArray.push(pathArray[i])
 		}
@@ -88,9 +88,10 @@ const checkoutBranch = (branch, givenPath) => {
 		console.log(repoPath)
 		nodegit.Repository.open(repoPath)
 			.then(repo => {
-				return repo.checkoutBranch(branch, {
-					checkoutStrategy: nodegit.Checkout.STRATEGY.FORCE,
-				})
+				return repo
+					.checkoutBranch(branch, {
+						checkoutStrategy: nodegit.Checkout.STRATEGY.FORCE,
+					})
 					.then(() => {
 						resolve()
 					})
@@ -102,7 +103,7 @@ const checkoutBranch = (branch, givenPath) => {
 const doesBranchExists = (branch_name, givenPath) => {
 	const pathArray = givenPath.split('/')
 	const dataIndex = pathArray.indexOf('data') + 1
-	let newArray = [];
+	let newArray = []
 	for (let i = 0; i < dataIndex + 1; i++) {
 		newArray.push(pathArray[i])
 	}
@@ -112,21 +113,22 @@ const doesBranchExists = (branch_name, givenPath) => {
 
 	nodegit.Repository.open(repoPath)
 		.then(repo => {
-			nodegit.Branch.lookup(repo, branch_name, 1).then(function (reference) {
-				// Use reference
-				console.log(reference)
-				if (!reference) {
-					console.log("Branch Doesn't exist")
-				} else {
-					console.log("Branch exists")
-				}
-				nodegit.Branch.name(reference).then(function (newString) {
-					console.log(newString)
-					if (!newString) {
-						console.log("nothing")
+			nodegit.Branch.lookup(repo, branch_name, 1)
+				.then(function(reference) {
+					// Use reference
+					console.log(reference)
+					if (!reference) {
+						console.log("Branch Doesn't exist")
+					} else {
+						console.log('Branch exists')
 					}
-				});
-			})
+					nodegit.Branch.name(reference).then(function(newString) {
+						console.log(newString)
+						if (!newString) {
+							console.log('nothing')
+						}
+					})
+				})
 				.catch(error => reject(new Error(error)))
 		})
 		.catch(error => reject(new Error(error)))
@@ -143,10 +145,9 @@ const commitToBranch = (validFor, sha, givenPath, author, committer) => {
 					`Updated: ${path.basename(
 						givenPath
 					)} file in branch ${branch}...`
-				)
-					.then(() => {
-						checkoutBranch("master", givenPath);
-					})
+				).then(() => {
+					checkoutBranch('master', givenPath)
+				})
 			})
 		})
 	})
@@ -157,5 +158,5 @@ module.exports = {
 	gitCommit,
 	cherryPickCommit,
 	commitToBranch,
-	checkoutBranch
+	checkoutBranch,
 }

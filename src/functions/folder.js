@@ -221,14 +221,19 @@ const getPathsOfAllFilesInFolder = async givenPath => {
 }
 
 const getFilesInBranch = (branchName, appName, entity) => {
-	return checkoutBranch(branchName, "./../apps/" + appName + "/data/" + entity)
-	.then(() => {
-		return getFolderWithFiles("./../apps/" + appName + "/data/" + entity)
-	})
-	.then((data) => {
-		checkoutBranch("master", "./../apps/" + appName + "/data/" + entity);
-		return data;
-	})
+	return checkoutBranch(
+		branchName,
+		'./../apps/' + appName + '/data/' + entity
+	)
+		.then(() => {
+			return getFolderWithFiles(
+				'./../apps/' + appName + '/data/' + entity
+			)
+		})
+		.then(data => {
+			checkoutBranch('master', './../apps/' + appName + '/data/' + entity)
+			return data
+		})
 }
 
 module.exports = {
@@ -237,5 +242,5 @@ module.exports = {
 	renameFolder,
 	getNestedFolders,
 	getFolderWithFiles,
-	getFilesInBranch
+	getFilesInBranch,
 }
