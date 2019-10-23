@@ -128,7 +128,7 @@ const deleteFolder = givenPath => {
 					message: `Deleted: File ${path.basename(file)}`,
 				}).then(sha =>
 					database
-						.deleteDoc(file)
+						.deleteFile(file)
 						.catch(error => reject(new Error(error)))
 				)
 			}
@@ -189,7 +189,7 @@ const renameFolder = (oldPath, newPath) => {
 					)} to ${path.basename(newPath)}`,
 				}).then(sha =>
 					database
-						.updateDoc({
+						.updateFile({
 							commit: sha,
 							path:
 								oldFilePaths[newFilePaths.indexOf(newFilePath)],
