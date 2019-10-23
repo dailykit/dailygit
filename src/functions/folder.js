@@ -13,7 +13,13 @@ const getFolderSize = require('../utils/getFolderSize')
 const database = require('./database')
 
 const { getRelFilePath, repoDir } = require('../utils/parsePath')
-const { stageChanges } = require('./git')
+// const { stageChanges } = require('./git')
+const {
+	stageChanges,
+	commitToBranch,
+	gitCommit,
+	checkoutBranch,
+} = require('./git')
 
 const getNestedFolders = async url => {
 	let content = await fs.readdirSync(url)
@@ -214,10 +220,22 @@ const getPathsOfAllFilesInFolder = async givenPath => {
 	})
 }
 
+const getFilesInBranch = (branchName, appName, entity) => {
+	return checkoutBranch(branchName, "./../apps/" + appName + "/data/" + entity)
+	.then(() => {
+		return getFolderWithFiles("./../apps/" + appName + "/data/" + entity)
+	})
+	.then((data) => {
+		checkoutBranch("master", "./../apps/" + appName + "/data/" + entity);
+		return data;
+	})
+}
+
 module.exports = {
 	createFolder,
 	deleteFolder,
 	renameFolder,
 	getNestedFolders,
 	getFolderWithFiles,
+	getFilesInBranch
 }

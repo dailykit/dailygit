@@ -157,4 +157,5 @@ module.exports = {
 	gitCommit,
 	cherryPickCommit,
 	commitToBranch,
+	checkoutBranch
 }
