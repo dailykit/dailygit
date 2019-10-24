@@ -155,13 +155,34 @@ const createApp = (name, entities) => {
 				name: name,
 				dependents: [],
 				status: 'active',
-				entities: entities,
+				...(entities && { entities: entities }),
 			})
 
 			// Save file as document
 			return app.save((error, result) => {
 				if (error) return reject(new Error(error))
-				return resolve(`App ${name} has been saved!`)
+				return resolve(result)
+			})
+		})
+	})
+}
+
+const updateApp = (apps, newAppDoc) => {
+	return new Promise((resolve, reject) => {
+		return connectToDB('apps').then(() => {
+			JSON.parse(apps).apps.map(app => {
+				App.findOne({ name: app.name }, (error, doc) => {
+					if (error) return reject(new Error(error))
+					App.findByIdAndUpdate(
+						{ _id: doc.id },
+						{ $push: { dependents: newAppDoc.id } },
+						{ new: true },
+						(error, doc) => {
+							if (error) return reject(new Error(error))
+							return resolve(doc)
+						}
+					)
+				})
 			})
 		})
 	})
@@ -173,4 +194,5 @@ module.exports = {
 	updateFile,
 	readFile,
 	createApp,
+	updateApp,
 }

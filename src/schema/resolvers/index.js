@@ -201,13 +201,35 @@ const resolvers = {
 						error: new Error(error),
 					}))
 			)
-			await database.createApp(
-				args.name,
-				schemas.map(schema => schema.path)
-			)
+
+			// Create the app
+			database.createApp(args.name, schemas.map(schema => schema.path))
+
 			return {
 				success: true,
 				message: `App ${args.name} is installed!`,
+			}
+		},
+		extendApp: async (_, { name, apps }) => {
+			// TODO: Check if app already exists
+			// Create the app
+			database
+				.createApp(name)
+				.then(doc => {
+					// Update the parent app's dependencies
+					return database.updateApp(apps, doc).catch(error => ({
+						success: false,
+						error: new Error(error),
+					}))
+				})
+				.catch(error => ({
+					success: false,
+					error: new Error(error),
+				}))
+
+			return {
+				success: true,
+				message: `App ${name} is installed!`,
 			}
 		},
 		createFolder: (_, args) => {
