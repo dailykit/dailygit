@@ -153,28 +153,39 @@ const commitToBranch = (validFor, sha, givenPath, author, committer) => {
 	})
 }
 
-const createBranch = async (master, branch) => {
-	await git.branch({ dir: master, ref: branch, checkout: true }).then(() => {
-		return git.listFiles({ dir: master, ref: branch }).then(files => {
-			return files.map(file => {
-				return fs.unlink(`${master}/${file}`, err => {
-					if (err) console.log(err)
-					git.remove({
-						dir: master,
-						filepath: file,
-					})
-					git.commit({
-						dir: master,
-						author: {
-							name: 'Mr. Test',
-							email: 'mrtest@example.com',
-						},
-						message: 'cleanup',
+const createBranch = async (givenPath, branch) => {
+	const pathArray = givenPath.split('/')
+	const dataIndex = pathArray.indexOf('data') + 1
+	let newArray = []
+	for (let i = 0; i < dataIndex + 1; i++) {
+		newArray.push(pathArray[i])
+	}
+	let repoPath = newArray.join('/')
+	repoPath += '/'
+	console.log(repoPath)
+	await git
+		.branch({ dir: repoPath, ref: branch, checkout: true })
+		.then(() => {
+			return git.listFiles({ dir: repoPath, ref: branch }).then(files => {
+				return files.map(file => {
+					return fs.unlink(`${repoPath}/${file}`, err => {
+						if (err) console.log(err)
+						git.remove({
+							dir: repoPath,
+							filepath: file,
+						})
+						git.commit({
+							dir: repoPath,
+							author: {
+								name: 'Mr. Test',
+								email: 'mrtest@example.com',
+							},
+							message: 'cleanup',
+						})
 					})
 				})
 			})
 		})
-	})
 }
 
 module.exports = {
@@ -183,4 +194,5 @@ module.exports = {
 	cherryPickCommit,
 	commitToBranch,
 	checkoutBranch,
+	createBranch,
 }
