@@ -211,26 +211,33 @@ const resolvers = {
 			}
 		},
 		extendApp: async (_, { name, apps }) => {
-			// TODO: Check if app already exists
 			// Create the app
-			database
+			await database
 				.createApp(name)
-				.then(doc => {
-					// Update the parent app's dependencies
-					return database.updateApp(apps, doc).catch(error => ({
-						success: false,
-						error: new Error(error),
-					}))
-				})
+				.then(doc => database.updateApp(apps, doc))
 				.catch(error => ({
 					success: false,
 					error: new Error(error),
 				}))
 
-			return {
+			// Update the parent app's dependencies
+			const addSchemas = await JSON.parse(apps).apps.map(app => {
+				return app.entities.map(entity => {
+					const path = `./../apps/${app.name}/schema/${entity.name}/${name}.json`
+					return fs.writeFile(
+						path,
+						JSON.stringify(entity.schema, null, 2),
+						error => {
+							if (error) return new Error(error)
+						}
+					)
+				})
+			})
+
+			return Promise.all(addSchemas).then(() => ({
 				success: true,
 				message: `App ${name} is installed!`,
-			}
+			}))
 		},
 		createFolder: (_, args) => {
 			if (fs.existsSync(args.path)) {
