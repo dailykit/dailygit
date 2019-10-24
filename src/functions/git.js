@@ -153,6 +153,30 @@ const commitToBranch = (validFor, sha, givenPath, author, committer) => {
 	})
 }
 
+const createBranch = async (master, branch) => {
+	await git.branch({ dir: master, ref: branch, checkout: true }).then(() => {
+		return git.listFiles({ dir: master, ref: branch }).then(files => {
+			return files.map(file => {
+				return fs.unlink(`${master}/${file}`, err => {
+					if (err) console.log(err)
+					git.remove({
+						dir: master,
+						filepath: file,
+					})
+					git.commit({
+						dir: master,
+						author: {
+							name: 'Mr. Test',
+							email: 'mrtest@example.com',
+						},
+						message: 'cleanup',
+					})
+				})
+			})
+		})
+	})
+}
+
 module.exports = {
 	stageChanges,
 	gitCommit,

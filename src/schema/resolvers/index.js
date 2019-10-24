@@ -11,12 +11,7 @@ const database = require('../../functions/database')
 
 const getFolderSize = require('../../utils/getFolderSize')
 const { getRelFilePath, repoDir } = require('../../utils/parsePath')
-const {
-	stageChanges,
-	commitToBranch,
-	gitCommit,
-	checkoutBranch,
-} = require('./../../functions/git.js')
+const { checkoutBranch } = require('./../../functions/git.js')
 
 const resolvers = {
 	Result: {
