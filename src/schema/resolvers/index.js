@@ -211,7 +211,7 @@ const resolvers = {
 			}
 		},
 		extendApp: async (_, { name, apps }) => {
-			// Create the app
+			// Create the app in db
 			await database
 				.createApp(name)
 				.then(doc => database.updateApp(apps, doc))
@@ -223,7 +223,7 @@ const resolvers = {
 			// Update the parent app's dependencies
 			const addSchemas = await JSON.parse(apps).apps.map(app => {
 				return app.entities.map(entity => {
-					const path = `./../apps/${app.name}/schema/${entity.name}/${name}.json`
+					const path = `./../apps/${app.name}/schema/${entity.name}/ext.${name}.json`
 					return fs.writeFile(
 						path,
 						JSON.stringify(entity.schema, null, 2),
