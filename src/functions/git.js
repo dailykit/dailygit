@@ -153,38 +153,31 @@ const commitToBranch = (validFor, sha, givenPath, author, committer) => {
 	})
 }
 
-const createBranch = async (givenPath, branch) => {
-	const pathArray = givenPath.split('/')
-	const dataIndex = pathArray.indexOf('data') + 1
-	let newArray = []
-	for (let i = 0; i < dataIndex + 1; i++) {
-		newArray.push(pathArray[i])
-	}
-	let repoPath = newArray.join('/')
-	repoPath += '/'
-	console.log(repoPath)
+const createBranch = async (givenPath, branch, author) => {
 	await git
-		.branch({ dir: repoPath, ref: branch, checkout: true })
+		.branch({ dir: repoDir(givenPath), ref: branch, checkout: true })
 		.then(() => {
-			return git.listFiles({ dir: repoPath, ref: branch }).then(files => {
-				return files.map(file => {
-					return fs.unlink(`${repoPath}/${file}`, err => {
-						if (err) console.log(err)
-						git.remove({
-							dir: repoPath,
-							filepath: file,
-						})
-						git.commit({
-							dir: repoPath,
-							author: {
-								name: 'Mr. Test',
-								email: 'mrtest@example.com',
-							},
-							message: 'cleanup',
-						})
+			return git
+				.listFiles({ dir: repoDir(givenPath), ref: branch })
+				.then(files => {
+					return files.map(file => {
+						return fs.unlink(
+							`${repoDir(givenPath)}/${file}`,
+							async error => {
+								if (error) return reject(new Error(error))
+								await git.remove({
+									dir: repoDir(givenPath),
+									filepath: file,
+								})
+								await git.commit({
+									dir: repoDir(givenPath),
+									author: author,
+									message: 'cleanup',
+								})
+							}
+						)
 					})
 				})
-			})
 		})
 }
 
