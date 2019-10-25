@@ -148,7 +148,7 @@ const readFile = path => {
 	})
 }
 
-const createApp = (name, entities) => {
+const createApp = ({ name, entities }) => {
 	return new Promise((resolve, reject) => {
 		return connectToDB('apps').then(() => {
 			const app = new App({
@@ -167,15 +167,15 @@ const createApp = (name, entities) => {
 	})
 }
 
-const updateApp = (apps, newAppDoc) => {
+const updateApp = (apps, appID) => {
 	return new Promise((resolve, reject) => {
 		return connectToDB('apps').then(() => {
-			JSON.parse(apps).apps.map(app => {
+			apps.map(app => {
 				App.findOne({ name: app.name }, (error, doc) => {
 					if (error) return reject(new Error(error))
 					App.findByIdAndUpdate(
 						{ _id: doc.id },
-						{ $push: { dependents: newAppDoc.id } },
+						{ $push: { dependents: appID } },
 						{ new: true },
 						(error, doc) => {
 							if (error) return reject(new Error(error))

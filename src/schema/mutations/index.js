@@ -15,8 +15,12 @@ const mutations = gql`
 		): Result
 		draftFile(path: String!, data: String!): Result
 		renameFile(oldPath: String!, newPath: String!): Result
-		installApp(name: String!, schemas: String): Result
-		extendApp(name: String!, apps: String): Result
+		installApp(
+			name: String!
+			schemas: String
+			apps: String
+			type: String!
+		): Result
 	}
 `
 
