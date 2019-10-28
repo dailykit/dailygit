@@ -57,6 +57,11 @@ const typeDefs = gql`
 		success: Boolean
 		error: String
 	}
+	type Image {
+		filename: String!
+		mimetype: String!
+		encoding: String!
+	}
 	type Query {
 		getFolderWithFiles(path: String): FolderWithFiles
 		getNestedFolders(path: String): Folder
