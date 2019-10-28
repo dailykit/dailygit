@@ -21,7 +21,7 @@ const mutations = gql`
 			apps: String
 			type: String!
 		): Result
-		imageUpload(file: Upload!): File!
+		imageUpload(file: Upload!): Result
 	}
 `
 

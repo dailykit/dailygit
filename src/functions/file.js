@@ -270,6 +270,22 @@ const renameFile = async (oldPath, newPath) => {
 	})
 }
 
+const upload = async ({ path, file }) => {
+	const { createReadStream, filename, path } = await file
+	const stream = createReadStream()
+	return new Promise((resolve, reject) => {
+		stream
+			.on('error', error => {
+				unlink(`${path}/${filename}`, () => {
+					reject(error)
+				})
+			})
+			.pipe(fs.createWriteStream(`${path}/${filename}`))
+			.on('error', error => reject(error))
+			.on('finish', resolve)
+	})
+}
+
 module.exports = {
 	createFile,
 	deleteFile,
@@ -278,4 +294,5 @@ module.exports = {
 	renameFile,
 	searchFiles,
 	draftFile,
+	upload,
 }

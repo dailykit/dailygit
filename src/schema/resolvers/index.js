@@ -478,6 +478,18 @@ const resolvers = {
 				error: `File ${path.basename(args.oldPath)} doesn't exists!`,
 			}
 		},
+		imageUpload: async (_, args) => {
+			return file
+				.upload(args)
+				.then(() => ({
+					success: false,
+					error: `File ${args.file.filename} has been uploaded`,
+				}))
+				.catch(failure => ({
+					success: false,
+					error: new Error(failure),
+				}))
+		},
 	},
 }
 
