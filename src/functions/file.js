@@ -282,7 +282,42 @@ const upload = async ({ file, path }) => {
 			})
 			.pipe(fs.createWriteStream(`${path}/${filename}`))
 			.on('error', error => reject(error))
-			.on('finish', resolve)
+			.on('finish', () => {
+				// Stage the file
+				stageChanges(
+					'add',
+					repoDir(path),
+					getRelFilePath(`${path}/${filename}`)
+				).catch(error => reject(new Error(error)))
+
+				// Commit the file
+				return gitCommit(
+					path,
+					{
+						name: 'placeholder',
+						email: 'placeholder@example.com',
+					},
+					{
+						name: 'placeholder',
+						email: 'placeholder@example.com',
+					},
+					`Added: ${filename}`
+				)
+					.then(sha => {
+						const fields = {
+							name: filename,
+							path: `${path}/${filename}`,
+							commits: [sha],
+						}
+
+						// Add the file to db document
+						return database
+							.createFile(fields)
+							.then(() => resolve(`Added: ${filename}`))
+							.catch(error => reject(new Error(error)))
+					})
+					.catch(error => reject(new Error(error)))
+			})
 	})
 }
 
