@@ -57,6 +57,7 @@ const typeDefs = gql`
 		success: Boolean
 		error: String
 	}
+	scalar Upload
 	type Image {
 		filename: String!
 		mimetype: String!

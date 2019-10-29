@@ -270,8 +270,8 @@ const renameFile = async (oldPath, newPath) => {
 	})
 }
 
-const upload = async ({ path, file }) => {
-	const { createReadStream, filename, path } = await file
+const upload = async ({ file, path }) => {
+	const { createReadStream, filename } = await file
 	const stream = createReadStream()
 	return new Promise((resolve, reject) => {
 		stream
