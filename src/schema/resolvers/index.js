@@ -27,16 +27,10 @@ const resolvers = {
 				const data = await folders
 					.getNestedFolders(args.path)
 					.then(response => response)
-				const folderSize = await getFolderSize(args.path)
-					.map(file => fs.readFileSync(file))
-					.join('\n')
 				const withParent = {
 					name: path.parse(args.path).name,
-					type: 'folder',
 					path: args.path,
 					children: data,
-					size: folderSize.length,
-					createdAt: fs.statSync(args.path).birthtime,
 				}
 				return withParent
 			}
@@ -48,6 +42,7 @@ const resolvers = {
 					.getFolderWithFiles(args.path)
 					.then(response => response)
 				const folderSize = await getFolderSize(args.path)
+					.filter(Boolean)
 					.map(file => fs.readFileSync(file))
 					.join('\n')
 				const withParent = {

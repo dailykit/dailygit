@@ -14,12 +14,7 @@ const database = require('./database')
 
 const { getRelFilePath, repoDir } = require('../utils/parsePath')
 // const { stageChanges } = require('./git')
-const {
-	stageChanges,
-	commitToBranch,
-	gitCommit,
-	checkoutBranch,
-} = require('./git')
+const { stageChanges, checkoutBranch } = require('./git')
 
 const getNestedFolders = async url => {
 	let content = await fs.readdirSync(url)
@@ -35,12 +30,6 @@ const getNestedFolders = async url => {
 			let node = {}
 			node.name = folder
 			node.path = `${url}/${folder}`
-			node.type = 'folder'
-			node.createdAt = stats.birthtime
-			const folderSize = await getFolderSize(`${url}/${folder}`)
-				.map(file => fs.readFileSync(file))
-				.join('\n')
-			node.size = folderSize.length
 			let children = await getNestedFolders(`${url}/${folder}`)
 			node.children = children
 			return node
@@ -72,6 +61,7 @@ const getFolderWithFiles = async url => {
 					node.children = functionResponse
 					node.type = 'folder'
 					const folderSize = await getFolderSize(`${url}/${item}`)
+						.filter(Boolean)
 						.map(file => fs.readFileSync(file))
 						.join('\n')
 					node.size = folderSize.length

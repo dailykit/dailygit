@@ -4,8 +4,9 @@ const fs = require('fs')
 const getFolderSize = dir => {
 	dir = dir.replace(/\/$/, '')
 	return _.flatten(
-		fs.readdirSync(dir).map(function(file) {
-			var fileOrDir = fs.statSync([dir, file].join('/'))
+		fs.readdirSync(dir).map(file => {
+			if (file === '.git' || file === 'schema') return ''
+			let fileOrDir = fs.statSync([dir, file].join('/'))
 			if (fileOrDir.isFile()) {
 				return (dir + '/' + file).replace(/^\.\/\/?/, '')
 			} else if (fileOrDir.isDirectory()) {
