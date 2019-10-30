@@ -270,55 +270,59 @@ const renameFile = async (oldPath, newPath) => {
 	})
 }
 
-const upload = async ({ file, path }) => {
-	const { createReadStream, filename } = await file
-	const stream = createReadStream()
-	return new Promise((resolve, reject) => {
-		stream
-			.on('error', error => {
-				unlink(`${path}/${filename}`, () => {
-					reject(error)
-				})
-			})
-			.pipe(fs.createWriteStream(`${path}/${filename}`))
-			.on('error', error => reject(error))
-			.on('finish', () => {
-				// Stage the file
-				stageChanges(
-					'add',
-					repoDir(path),
-					getRelFilePath(`${path}/${filename}`)
-				).catch(error => reject(new Error(error)))
-
-				// Commit the file
-				return gitCommit(
-					path,
-					{
-						name: 'placeholder',
-						email: 'placeholder@example.com',
-					},
-					{
-						name: 'placeholder',
-						email: 'placeholder@example.com',
-					},
-					`Added: ${filename}`
-				)
-					.then(sha => {
-						const fields = {
-							name: filename,
-							path: `${path}/${filename}`,
-							commits: [sha],
-						}
-
-						// Add the file to db document
-						return database
-							.createFile(fields)
-							.then(() => resolve(`Added: ${filename}`))
-							.catch(error => reject(new Error(error)))
+const upload = async args => {
+	const files = await args.files
+	const uploadAll = await Object.keys(files).map(async key => {
+		const { createReadStream, filename } = await files[key]
+		const stream = createReadStream()
+		return new Promise((resolve, reject) => {
+			return stream
+				.on('error', error => {
+					unlink(`${args.path}/${filename}`, () => {
+						reject(new Error(error))
 					})
-					.catch(error => reject(new Error(error)))
-			})
+				})
+				.pipe(fs.createWriteStream(`${args.path}/${filename}`))
+				.on('error', error => reject(new Error(error)))
+				.on('finish', () => {
+					// Stage the file
+					stageChanges(
+						'add',
+						repoDir(args.path),
+						getRelFilePath(`${args.path}/${filename}`)
+					).catch(error => reject(new Error(error)))
+
+					// Commit the file
+					return gitCommit(
+						args.path,
+						{
+							name: 'placeholder',
+							email: 'placeholder@example.com',
+						},
+						{
+							name: 'placeholder',
+							email: 'placeholder@example.com',
+						},
+						`Added: ${filename}`
+					)
+						.then(sha => {
+							const fields = {
+								name: filename,
+								path: `${args.path}/${filename}`,
+								commits: [sha],
+							}
+
+							// Add the file to db document
+							return database
+								.createFile(fields)
+								.then(() => resolve())
+								.catch(error => reject(new Error(error)))
+						})
+						.catch(error => reject(new Error(error)))
+				})
+		})
 	})
+	return Promise.all(uploadAll)
 }
 
 module.exports = {

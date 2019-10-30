@@ -474,12 +474,14 @@ const resolvers = {
 			}
 		},
 		imageUpload: async (_, args) => {
-			const { filename } = await args.file
+			const allFiles = await args.files
 			return files
 				.upload(args)
 				.then(() => ({
 					success: true,
-					message: `File ${filename} has been uploaded`,
+					message: `${allFiles.length} file${
+						allFiles.length > 1 ? 's' : ''
+					} has been uploaded`,
 				}))
 				.catch(failure => ({
 					success: false,
