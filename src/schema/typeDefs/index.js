@@ -77,6 +77,10 @@ const typeDefs = gql`
 			appName: String!
 			entity: String!
 		): FolderWithFiles
+		openFile(path: String!): File
+	}
+	type Subscription {
+		openFileSub: File
 	}
 `
 

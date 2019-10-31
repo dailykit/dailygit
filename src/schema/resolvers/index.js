@@ -13,12 +13,22 @@ const getFolderSize = require('../../utils/getFolderSize')
 const { getRelFilePath, repoDir } = require('../../utils/parsePath')
 const { checkoutBranch } = require('./../../functions/git.js')
 
+const { PubSub } = require('apollo-server')
+const pubsub = new PubSub()
+
+const FILE_OPENED = 'FILE_OPENED'
+
 const resolvers = {
 	Result: {
 		__resolveType: obj => {
 			if (obj.error) return 'Error'
 			if (obj.message) return 'Success'
 			return null
+		},
+	},
+	Subscription: {
+		openFileSub: {
+			subscribe: () => pubsub.asyncIterator([FILE_OPENED]),
 		},
 	},
 	Query: {
@@ -62,6 +72,17 @@ const resolvers = {
 				return files
 					.getFile(args.path)
 					.then(success => success)
+					.catch(failure => new Error(failure))
+			}
+			return new Error('ENOENT')
+		},
+		openFile: (_, args) => {
+			if (fs.existsSync(args.path)) {
+				return files
+					.getFile(args.path)
+					.then(success => {
+						pubsub.publish(FILE_OPENED, { openFileSub: success })
+					})
 					.catch(failure => new Error(failure))
 			}
 			return new Error('ENOENT')
