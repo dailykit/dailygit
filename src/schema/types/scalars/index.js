@@ -28,19 +28,16 @@ const typeDefs = gql`
 		commits: [String]
 		lastSaved: String
 	}
-
 	type Author {
 		name: String
 		email: String
 		timestamp: String
 	}
-
 	type Committer {
 		name: String
 		email: String
 		timestamp: String
 	}
-
 	type Commit {
 		message: String
 		tree: String
@@ -58,30 +55,6 @@ const typeDefs = gql`
 		error: String
 	}
 	scalar Upload
-	type Image {
-		filename: String!
-		mimetype: String!
-		encoding: String!
-	}
-	type Query {
-		getFolderWithFiles(path: String): FolderWithFiles
-		getNestedFolders(path: String): Folder
-		getFile(path: String!): File
-		searchFiles(fileName: String!): String
-		getCommitLog(path: String!): [Commit]
-		getCommits(path: String!, commits: [String]!): [Commit]
-		getCommit(id: String!, path: String!): Commit
-		getCommitContent(id: String!, path: String!): String
-		showFilesInBranch(
-			branchName: String!
-			appName: String!
-			entity: String!
-		): FolderWithFiles
-		openFile(path: String!): File
-	}
-	type Subscription {
-		openFileSub: File
-	}
 `
 
 module.exports = typeDefs

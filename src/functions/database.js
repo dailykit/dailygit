@@ -20,6 +20,7 @@ const connectToDB = dbName => {
 			.catch(error => reject(new Error(error)))
 	})
 }
+
 // Create file document
 const createFile = fields => {
 	return new Promise((resolve, reject) => {
@@ -32,7 +33,7 @@ const createFile = fields => {
 			const file = new Model(fields)
 
 			// Save file as document
-			return file.save((error, result) => {
+			return file.save(error => {
 				if (error) return reject(new Error(error))
 				return resolve(`File ${fields.name} has been saved!`)
 			})

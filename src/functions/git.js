@@ -49,7 +49,6 @@ const cherryPickCommit = (sha, givenPath) => {
 		}
 		let repoPath = newArray.join('/')
 		repoPath += '/'
-		console.log(repoPath)
 
 		nodegit.Repository.open(repoPath)
 			.then(repo => {
@@ -85,7 +84,6 @@ const checkoutBranch = (branch, givenPath) => {
 		}
 		let repoPath = newArray.join('/')
 		repoPath += '/'
-		console.log(repoPath)
 		nodegit.Repository.open(repoPath)
 			.then(repo => {
 				return repo
@@ -109,23 +107,20 @@ const doesBranchExists = (branch_name, givenPath) => {
 	}
 	let repoPath = newArray.join('/')
 	repoPath += '/'
-	console.log(repoPath)
 
 	nodegit.Repository.open(repoPath)
 		.then(repo => {
 			nodegit.Branch.lookup(repo, branch_name, 1)
 				.then(function(reference) {
 					// Use reference
-					console.log(reference)
 					if (!reference) {
-						console.log("Branch Doesn't exist")
+						// Branch doesnt exist
 					} else {
-						console.log('Branch exists')
+						// Branch exists
 					}
 					nodegit.Branch.name(reference).then(function(newString) {
-						console.log(newString)
 						if (!newString) {
-							console.log('nothing')
+							// no new string
 						}
 					})
 				})
@@ -200,4 +195,5 @@ module.exports = {
 	commitToBranch,
 	checkoutBranch,
 	createBranch,
+	doesBranchExists,
 }

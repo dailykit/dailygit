@@ -278,7 +278,7 @@ const upload = async args => {
 		return new Promise((resolve, reject) => {
 			return stream
 				.on('error', error => {
-					unlink(`${args.path}/${filename}`, () => {
+					fs.unlink(`${args.path}/${filename}`, () => {
 						reject(new Error(error))
 					})
 				})
