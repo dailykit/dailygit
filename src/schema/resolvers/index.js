@@ -8,6 +8,7 @@ git.plugins.set('fs', fs)
 const folders = require('../../functions/folder')
 const files = require('../../functions/file')
 const database = require('../../functions/database')
+const gitFuncs = require('../../functions/git')
 
 const getFolderSize = require('../../utils/getFolderSize')
 const { getRelFilePath, repoDir } = require('../../utils/parsePath')
@@ -248,11 +249,28 @@ const resolvers = {
 					})
 				})
 
+				// Create branch the for the app
+				const addBranches = await apps.map(app => {
+					return app.entities.map(async entity => {
+						const path = `./../apps/${app.name}/data/${entity.name}`
+						return await gitFuncs
+							.createBranch(path, args.name.toLowerCase(), {
+								name: 'placeholder',
+								email: 'placeholder@example.com',
+							})
+							.catch(error => ({
+								success: false,
+								error: new Error(error),
+							}))
+					})
+				})
+
 				return Promise.all([
 					addPaths,
 					addDatas,
 					addSchemas,
 					extendSchemas,
+					addBranches,
 				]).then(() => ({
 					success: true,
 					message: `App ${args.name} is installed!`,
@@ -329,6 +347,22 @@ const resolvers = {
 				// Update the deps of extended app.
 				await database.updateApp(apps, docId)
 
+				// Create branch the for the app
+				const addBranches = await apps.map(app => {
+					return app.entities.map(async entity => {
+						const path = `./../apps/${app.name}/data/${entity.name}`
+						return await gitFuncs
+							.createBranch(path, args.name.toLowerCase(), {
+								name: 'placeholder',
+								email: 'placeholder@example.com',
+							})
+							.catch(error => ({
+								success: false,
+								error: new Error(error),
+							}))
+					})
+				})
+
 				// Update the parent app's dependencies
 				const addSchemas = await apps.map(app => {
 					return app.entities.map(entity => {
@@ -343,10 +377,12 @@ const resolvers = {
 					})
 				})
 
-				return Promise.all(addSchemas).then(() => ({
-					success: true,
-					message: `App ${args.name} is installed!`,
-				}))
+				return Promise.all([addBranches, addSchemas])
+					.then(() => ({
+						success: true,
+						message: `App ${args.name} is installed!`,
+					}))
+					.catch(error => console.log(error))
 			}
 		},
 		createFolder: (_, args) => {

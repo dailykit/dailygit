@@ -185,7 +185,9 @@ const createBranch = async (repo, name, author) => {
 				ref: 'master',
 				checkout: true,
 			})
-			return Promise.all([remove, commit, checkout])
+			return Promise.all([remove, commit, checkout]).catch(
+				error => new Error(error)
+			)
 		})
 
 	return Promise.all([create, clean]).catch(error => new Error(error))
