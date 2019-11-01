@@ -3,7 +3,7 @@ const git = require('isomorphic-git')
 const path = require('path')
 
 const nodegit = require('nodegit')
-const { CherrypickOptions, MergeOptions, Branch } = require('nodegit')
+const { CherrypickOptions, MergeOptions } = require('nodegit')
 
 git.plugins.set('fs', fs)
 
@@ -54,7 +54,7 @@ const cherryPickCommit = (sha, givenPath) => {
 		nodegit.Repository.open(repoPath)
 			.then(repo => {
 				nodegit.Commit.lookup(repo, sha).then(commit => {
-					const cherrypickOptions = new CherrypickOptions()
+					let cherrypickOptions = new CherrypickOptions()
 
 					cherrypickOptions = {
 						mergeOpts: new MergeOptions(),
@@ -153,32 +153,42 @@ const commitToBranch = (validFor, sha, givenPath, author, committer) => {
 	})
 }
 
-const createBranch = async (givenPath, branch, author) => {
-	await git
-		.branch({ dir: repoDir(givenPath), ref: branch, checkout: true })
-		.then(() => {
-			return git
-				.listFiles({ dir: repoDir(givenPath), ref: branch })
-				.then(files => {
-					return files.map(file => {
-						return fs.unlink(
-							`${repoDir(givenPath)}/${file}`,
-							async error => {
-								if (error) return reject(new Error(error))
-								await git.remove({
-									dir: repoDir(givenPath),
-									filepath: file,
-								})
-								await git.commit({
-									dir: repoDir(givenPath),
-									author: author,
-									message: 'cleanup',
-								})
-							}
-						)
-					})
+const createBranch = async (repo, name, author) => {
+	// Create Branch
+	const create = await git.branch({ dir: repo, ref: name, checkout: true })
+
+	// List files in branch
+	const clean = await git
+		.listFiles({ dir: repo, ref: name })
+		.then(async files => {
+			// Delete files
+			const remove = await files.map(file => {
+				return fs.unlink(`${repo}/${file}`, async error => {
+					if (error) return new Error(error)
+					// Remove file from indexing
+					return await git.remove({ dir: repo, filepath: file })
 				})
+			})
+
+			// Commit deleted files
+			const commit = await git
+				.commit({
+					dir: repo,
+					author: author,
+					message: 'Clean Up',
+				})
+				.catch(error => new Error(error))
+
+			// Checkout to master
+			const checkout = await git.checkout({
+				dir: repo,
+				ref: 'master',
+				checkout: true,
+			})
+			return Promise.all([remove, commit, checkout])
 		})
+
+	return Promise.all([create, clean]).catch(error => new Error(error))
 }
 
 module.exports = {
