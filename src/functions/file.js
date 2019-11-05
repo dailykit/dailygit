@@ -171,30 +171,30 @@ const updateFile = async args => {
 					email: 'placeholder@example.com',
 				},
 				commitMessage
-			)
-				.then(sha =>
-					database
-						.updateFile({ commit: sha, path: givenPath })
-						.then(() =>
-							resolve(`Updated: ${path.basename(givenPath)} file`)
-						)
-						.catch(error => reject(new Error(error)))
+			).then(async sha => {
+				await database
+					.updateFile({ commit: sha, path: givenPath })
+					.catch(error => reject(new Error(error)))
+				const author = {
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				}
+				const committer = {
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				}
+				await commitToBranch(
+					validatedFor,
+					sha,
+					givenPath,
+					author,
+					committer
 				)
-				.then(sha => {
-					commitToBranch(
-						validatedFor,
-						sha,
-						givenPath,
-						{
-							name: 'placeholder',
-							email: 'placeholder@example.com',
-						},
-						{
-							name: 'placeholder',
-							email: 'placeholder@example.com',
-						}
+					.then(() =>
+						resolve(`Updated: ${path.basename(givenPath)} file`)
 					)
-				})
+					.catch(error => reject(new Error(error)))
+			})
 		})
 	})
 }

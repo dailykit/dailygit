@@ -40,110 +40,51 @@ const gitCommit = (givenPath, author, committer, message) => {
 
 const cherryPickCommit = (sha, givenPath) => {
 	return new Promise((resolve, reject) => {
-		const pathArray = givenPath.split('/')
-		const dataIndex = pathArray.indexOf('data') + 1
-
-		let newArray = []
-		for (let i = 0; i < dataIndex + 1; i++) {
-			newArray.push(pathArray[i])
-		}
-		let repoPath = newArray.join('/')
-		repoPath += '/'
-
-		nodegit.Repository.open(repoPath)
+		return nodegit.Repository.open(repoDir(givenPath))
 			.then(repo => {
 				nodegit.Commit.lookup(repo, sha).then(commit => {
 					let cherrypickOptions = new CherrypickOptions()
-
 					cherrypickOptions = {
 						mergeOpts: new MergeOptions(),
 					}
-
 					cherrypickOptions.mergeOpts.fileFavor = 2
 					nodegit.Cherrypick.cherrypick(
 						repo,
 						commit,
 						cherrypickOptions
 					)
-						.then(int => {})
+						.then(int => resolve())
 						.catch(error => reject(new Error(error)))
 				})
 			})
 			.catch(error => reject(new Error(error)))
-		return resolve()
 	})
-}
-
-const checkoutBranch = (branch, givenPath) => {
-	return new Promise((resolve, reject) => {
-		const pathArray = givenPath.split('/')
-		const dataIndex = pathArray.indexOf('data') + 1
-		let newArray = []
-		for (let i = 0; i < dataIndex + 1; i++) {
-			newArray.push(pathArray[i])
-		}
-		let repoPath = newArray.join('/')
-		repoPath += '/'
-		nodegit.Repository.open(repoPath)
-			.then(repo => {
-				return repo
-					.checkoutBranch(branch, {
-						checkoutStrategy: nodegit.Checkout.STRATEGY.FORCE,
-					})
-					.then(() => {
-						resolve()
-					})
-			})
-			.catch(error => reject(new Error(error)))
-	})
-}
-
-const doesBranchExists = (branch_name, givenPath) => {
-	const pathArray = givenPath.split('/')
-	const dataIndex = pathArray.indexOf('data') + 1
-	let newArray = []
-	for (let i = 0; i < dataIndex + 1; i++) {
-		newArray.push(pathArray[i])
-	}
-	let repoPath = newArray.join('/')
-	repoPath += '/'
-
-	nodegit.Repository.open(repoPath)
-		.then(repo => {
-			nodegit.Branch.lookup(repo, branch_name, 1)
-				.then(function(reference) {
-					// Use reference
-					if (!reference) {
-						// Branch doesnt exist
-					} else {
-						// Branch exists
-					}
-					nodegit.Branch.name(reference).then(function(newString) {
-						if (!newString) {
-							// no new string
-						}
-					})
-				})
-				.catch(error => reject(new Error(error)))
-		})
-		.catch(error => reject(new Error(error)))
 }
 
 const commitToBranch = (validFor, sha, givenPath, author, committer) => {
-	validFor.forEach(branch => {
-		checkoutBranch(branch, givenPath).then(() => {
-			cherryPickCommit(sha, givenPath).then(() => {
-				gitCommit(
-					givenPath,
-					author,
-					committer,
-					`Updated: ${path.basename(
-						givenPath
-					)} file in branch ${branch}...`
-				).then(() => {
-					checkoutBranch('master', givenPath)
-				})
+	return new Promise((resolve, reject) => {
+		validFor.forEach(async branch => {
+			await git.checkout({
+				dir: repoDir(givenPath),
+				ref: branch,
 			})
+			cherryPickCommit(sha, givenPath)
+				.then(() => {
+					gitCommit(
+						givenPath,
+						author,
+						committer,
+						`Updated: ${path.basename(
+							givenPath
+						)} file in branch ${branch}...`
+					)
+					git.checkout({
+						dir: repoDir(givenPath),
+						ref: 'master',
+					})
+					resolve()
+				})
+				.catch(e => reject(new Error(e)))
 		})
 	})
 }
@@ -193,7 +134,5 @@ module.exports = {
 	gitCommit,
 	cherryPickCommit,
 	commitToBranch,
-	checkoutBranch,
 	createBranch,
-	doesBranchExists,
 }
