@@ -10,11 +10,6 @@ const typeDefs = gql`
 		getCommits(path: String!, commits: [String]!): [Commit]
 		getCommit(id: String!, path: String!): Commit
 		getCommitContent(id: String!, path: String!): String
-		showFilesInBranch(
-			branchName: String!
-			appName: String!
-			entity: String!
-		): FolderWithFiles
 		openFile(path: String!): File
 	}
 `

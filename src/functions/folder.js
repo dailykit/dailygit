@@ -13,8 +13,7 @@ const getFolderSize = require('../utils/getFolderSize')
 const database = require('./database')
 
 const { getRelFilePath, repoDir } = require('../utils/parsePath')
-// const { stageChanges } = require('./git')
-const { stageChanges, checkoutBranch } = require('./git')
+const { stageChanges } = require('./git')
 
 const getNestedFolders = async url => {
 	let content = await fs.readdirSync(url)
@@ -87,9 +86,9 @@ const createFolder = givenPath => {
 }
 
 const deleteFolder = givenPath => {
-	return new Promise(async (resolve, reject) => {
+	return new Promise((resolve, reject) => {
 		// Get all file paths from the folder
-		const allFilePaths = await getPathsOfAllFilesInFolder(givenPath).then(
+		const allFilePaths = getPathsOfAllFilesInFolder(givenPath).then(
 			files => files
 		)
 
@@ -105,18 +104,20 @@ const deleteFolder = givenPath => {
 				).catch(error => reject(new Error(error)))
 
 				// Commit the deleted files
+				const author = {
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				}
+				const committer = {
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				}
 				git.commit({
 					dir: repoDir(givenPath),
-					author: {
-						name: 'placeholder',
-						email: 'placeholder@example.com',
-					},
-					commiter: {
-						name: 'placeholder',
-						email: 'placeholder@example.com',
-					},
+					author,
+					committer,
 					message: `Deleted: File ${path.basename(file)}`,
-				}).then(sha =>
+				}).then(() =>
 					database
 						.deleteFile(file)
 						.catch(error => reject(new Error(error)))
@@ -128,7 +129,7 @@ const deleteFolder = givenPath => {
 }
 
 const renameFolder = (oldPath, newPath) => {
-	return new Promise(async (resolve, reject) => {
+	return new Promise((resolve, reject) => {
 		// Check if newPath file exists
 		if (oldPath === newPath) {
 			return resolve("New name can't be the same old name!")
@@ -137,7 +138,7 @@ const renameFolder = (oldPath, newPath) => {
 		}
 
 		// Get list of all file paths in before renaming folder
-		const oldFilePaths = await getPathsOfAllFilesInFolder(oldPath).then(
+		const oldFilePaths = getPathsOfAllFilesInFolder(oldPath).then(
 			files => files
 		)
 		fs.rename(oldPath, newPath, async error => {
@@ -158,6 +159,14 @@ const renameFolder = (oldPath, newPath) => {
 			}
 
 			// Add all the new files to staging and commit them
+			const author = {
+				name: 'placeholder',
+				email: 'placeholder@example.com',
+			}
+			const committer = {
+				name: 'placeholder',
+				email: 'placeholder@example.com',
+			}
 			for (let newFilePath of newFilePaths) {
 				stageChanges(
 					'add',
@@ -166,14 +175,8 @@ const renameFolder = (oldPath, newPath) => {
 				).catch(error => reject(new Error(error)))
 				git.commit({
 					dir: repoDir(oldPath),
-					author: {
-						name: 'placeholder',
-						email: 'placeholder@example.com',
-					},
-					commiter: {
-						name: 'placeholder',
-						email: 'placeholder@example.com',
-					},
+					author,
+					committer,
 					message: `Renamed: Parent folder from ${path.basename(
 						oldPath
 					)} to ${path.basename(newPath)}`,
@@ -210,27 +213,10 @@ const getPathsOfAllFilesInFolder = async givenPath => {
 	})
 }
 
-const getFilesInBranch = (branchName, appName, entity) => {
-	return checkoutBranch(
-		branchName,
-		'./../apps/' + appName + '/data/' + entity
-	)
-		.then(() => {
-			return getFolderWithFiles(
-				'./../apps/' + appName + '/data/' + entity
-			)
-		})
-		.then(data => {
-			checkoutBranch('master', './../apps/' + appName + '/data/' + entity)
-			return data
-		})
-}
-
 module.exports = {
 	createFolder,
 	deleteFolder,
 	renameFolder,
 	getNestedFolders,
 	getFolderWithFiles,
-	getFilesInBranch,
 }

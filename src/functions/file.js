@@ -6,7 +6,12 @@ git.plugins.set('fs', fs)
 
 const database = require('./database')
 
-const { getRelFilePath, repoDir, getAppName } = require('../utils/parsePath')
+const {
+	getRelFilePath,
+	repoDir,
+	getAppName,
+	baseFolder,
+} = require('../utils/parsePath')
 const { stageChanges, commitToBranch, gitCommit } = require('./git')
 
 const createFile = ({ path: givenPath, content }) => {
@@ -68,16 +73,18 @@ const deleteFile = givenPath => {
 			).catch(error => reject(new Error(error)))
 
 			// Commit the deleted file
+			const author = {
+				name: 'placeholder',
+				email: 'placeholder@example.com',
+			}
+			const committer = {
+				name: 'placeholder',
+				email: 'placeholder@example.com',
+			}
 			return gitCommit(
 				givenPath,
-				{
-					name: 'placeholder',
-					email: 'placeholder@example.com',
-				},
-				{
-					name: 'placeholder',
-					email: 'placeholder@example.com',
-				},
+				author,
+				committer,
 				`Deleted: ${path.basename(givenPath)}`
 			).then(() =>
 				database
@@ -122,7 +129,7 @@ const searchFiles = async fileName => {
 		)
 	}
 	return new Promise((resolve, reject) => {
-		getFilesRecursively('./../apps', [ignoreFunc], (err, files) => {
+		getFilesRecursively(baseFolder, [ignoreFunc], (err, files) => {
 			if (err) return reject(new Error(err))
 			const paths = files
 				.map(file => `./${file.replace(/\\/g, '/')}`)
@@ -212,7 +219,6 @@ const updateFileInBranch = async ({ path: givenPath, branch }) => {
 		)
 		return result
 	} catch (error) {
-		console.log(error)
 		return new Error(error)
 	}
 }
@@ -259,16 +265,18 @@ const renameFile = async (oldPath, newPath) => {
 			).catch(error => reject(new Error(error)))
 
 			// Commit the staged files
+			const author = {
+				name: 'placeholder',
+				email: 'placeholder@example.com',
+			}
+			const committer = {
+				name: 'placeholder',
+				email: 'placeholder@example.com',
+			}
 			return gitCommit(
 				oldPath,
-				{
-					name: 'placeholder',
-					email: 'placeholder@example.com',
-				},
-				{
-					name: 'placeholder',
-					email: 'placeholder@example.com',
-				},
+				author,
+				committer,
 				`Renamed: ${path.basename(oldPath)} file to ${path.basename(
 					newPath
 				)}`
@@ -311,16 +319,18 @@ const upload = async args => {
 					).catch(error => reject(new Error(error)))
 
 					// Commit the file
+					const author = {
+						name: 'placeholder',
+						email: 'placeholder@example.com',
+					}
+					const committer = {
+						name: 'placeholder',
+						email: 'placeholder@example.com',
+					}
 					return gitCommit(
 						args.path,
-						{
-							name: 'placeholder',
-							email: 'placeholder@example.com',
-						},
-						{
-							name: 'placeholder',
-							email: 'placeholder@example.com',
-						},
+						author,
+						committer,
 						`Added: ${filename}`
 					)
 						.then(sha => {

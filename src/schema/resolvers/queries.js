@@ -9,7 +9,6 @@ const files = require('../../functions/file')
 
 const getFolderSize = require('../../utils/getFolderSize')
 const { getRelFilePath, repoDir } = require('../../utils/parsePath')
-const { checkoutBranch } = require('../../functions/git.js')
 
 const { PubSub } = require('apollo-server')
 const pubsub = new PubSub()
@@ -125,26 +124,6 @@ const resolvers = {
 				})
 				.then(({ object }) => object)
 				.catch(error => new Error(error))
-		},
-		showFilesInBranch: (_, { branchName, appName, entity }) => {
-			return checkoutBranch(
-				branchName,
-				'./../apps/' + appName + '/data/' + entity
-			)
-				.then(() => {
-					return resolvers.Query.getFolderWithFiles('', {
-						path: './../apps/' + appName + '/data/' + entity,
-					}).then(data => {
-						return data
-					})
-				})
-				.then(data => {
-					checkoutBranch(
-						'master',
-						'./../apps/' + appName + '/data/' + entity
-					)
-					return data
-				})
 		},
 	},
 }

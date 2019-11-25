@@ -27,4 +27,5 @@ module.exports = {
 	repoDir,
 	getAppName,
 	getRepoName,
+	baseFolder,
 }
