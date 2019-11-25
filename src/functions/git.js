@@ -100,43 +100,49 @@ const commitToBranch = async (
 }
 
 const createBranch = async (repo, name, author) => {
-	// Create Branch
-	const create = await git.branch({ dir: repo, ref: name, checkout: true })
+	try {
+		// Create Branch
+		await git.branch({
+			dir: repo,
+			ref: name,
+			checkout: true,
+		})
 
-	// List files in branch
-	const clean = await git
-		.listFiles({ dir: repo, ref: name })
-		.then(async files => {
+		// List files in branch
+		await git.listFiles({ dir: repo, ref: name }).then(async files => {
 			// Delete files
-			const remove = await files.map(file => {
-				return fs.unlink(`${repo}/${file}`, async error => {
-					if (error) return new Error(error)
-					// Remove file from indexing
-					return await git.remove({ dir: repo, filepath: file })
+			try {
+				await files.map(file => {
+					return fs.unlink(`${repo}/${file}`, async error => {
+						if (error) throw new Error(error)
+						// Remove file from indexing
+						return await git.remove({
+							dir: repo,
+							filepath: file,
+						})
+					})
 				})
-			})
 
-			// Commit deleted files
-			const commit = await git
-				.commit({
+				// Commit deleted files
+				await git.commit({
 					dir: repo,
 					author: author,
 					message: 'Clean Up',
 				})
-				.catch(error => new Error(error))
 
-			// Checkout to master
-			const checkout = await git.checkout({
-				dir: repo,
-				ref: 'master',
-				checkout: true,
-			})
-			return Promise.all([remove, commit, checkout]).catch(
-				error => new Error(error)
-			)
+				// Checkout to master
+				await git.checkout({
+					dir: repo,
+					ref: 'master',
+					checkout: true,
+				})
+			} catch (error) {
+				return error
+			}
 		})
-
-	return Promise.all([create, clean]).catch(error => new Error(error))
+	} catch (error) {
+		return new Error(error)
+	}
 }
 
 module.exports = {

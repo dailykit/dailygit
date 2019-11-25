@@ -16,31 +16,35 @@ const { getRelFilePath, repoDir } = require('../utils/parsePath')
 const { stageChanges } = require('./git')
 
 const getNestedFolders = async url => {
-	let content = await fs.readdirSync(url)
-	let folders = content.filter(
-		item =>
-			fs.statSync(`${url}/${item}`).isDirectory() &&
-			item !== '.git' &&
-			item !== 'schema'
-	)
-	let nestedData = folders.map(async folder => {
-		const stats = fs.statSync(`${url}/${folder}`)
-		if (stats.isDirectory()) {
-			let node = {}
-			node.name = folder
-			node.path = `${url}/${folder}`
-			let children = await getNestedFolders(`${url}/${folder}`)
-			node.children = children
-			return node
-		}
-	})
-	return Promise.all(nestedData).then(response => response)
+	try {
+		let content = await fs.readdirSync(url)
+		let folders = await content.filter(
+			item =>
+				fs.statSync(`${url}/${item}`).isDirectory() &&
+				item !== '.git' &&
+				item !== 'schema'
+		)
+		let result = folders.map(async folder => {
+			const stats = fs.statSync(`${url}/${folder}`)
+			if (stats.isDirectory()) {
+				let node = {}
+				node.name = folder
+				node.path = `${url}/${folder}`
+				let children = await getNestedFolders(`${url}/${folder}`)
+				node.children = children
+				return node
+			}
+		})
+		return result
+	} catch (error) {
+		return new Error(error)
+	}
 }
 
 const getFolderWithFiles = async url => {
 	try {
-		let data = await fs.readdirSync(url)
-		let nestedData = data
+		const data = await fs.readdirSync(url)
+		const result = await data
 			.filter(item => item !== '.git' && item !== 'schema')
 			.map(async item => {
 				const stats = fs.statSync(`${url}/${item}`)
@@ -67,9 +71,9 @@ const getFolderWithFiles = async url => {
 				}
 				return node
 			})
-		return Promise.all(nestedData).then(result => result)
-	} catch (e) {
-		console.log(e)
+		return result
+	} catch (error) {
+		return new Error(error)
 	}
 }
 

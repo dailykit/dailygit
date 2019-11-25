@@ -14,86 +14,81 @@ const {
 } = require('../utils/parsePath')
 const { stageChanges, commitToBranch, gitCommit } = require('./git')
 
-const createFile = ({ path: givenPath, content }) => {
-	return new Promise((resolve, reject) => {
-		// Check if folder exists
+const createFile = async ({ path: givenPath, content }) => {
+	try {
+		// Check if entity folder exists
 		if (!fs.existsSync(path.dirname(givenPath))) {
-			fs.mkdirSync(path.dirname(givenPath), { recursive: true })
+			return `Entity folder doesn't exist`
 		}
 		// Create the file
-		fs.writeFileSync(givenPath, JSON.stringify(content, null, 2))
+		await fs.writeFileSync(givenPath, JSON.stringify(content, null, 2))
 
 		// Stage the file
-		stageChanges(
-			'add',
-			repoDir(givenPath),
-			getRelFilePath(givenPath)
-		).catch(error => reject(new Error(error)))
+		await stageChanges('add', repoDir(givenPath), getRelFilePath(givenPath))
 
 		// Commit the file
-		return gitCommit(
+		const author = {
+			name: 'placeholder',
+			email: 'placeholder@example.com',
+		}
+		const committer = {
+			name: 'placeholder',
+			email: 'placeholder@example.com',
+		}
+		const sha = await gitCommit(
 			givenPath,
-			{
-				name: 'placeholder',
-				email: 'placeholder@example.com',
-			},
-			{
-				name: 'placeholder',
-				email: 'placeholder@example.com',
-			},
+			author,
+			committer,
 			`Added: ${path.basename(givenPath)}`
 		)
-			.then(sha => {
-				const fields = {
-					name: path.basename(givenPath),
-					path: givenPath,
-					commits: [sha],
-				}
 
-				// Add the file to db document
-				return database
-					.createFile(fields)
-					.then(() => resolve(`Added: ${path.basename(givenPath)}`))
-					.catch(error => reject(new Error(error)))
-			})
-			.catch(error => reject(new Error(error)))
-	})
+		// Add the file to db document
+		const fields = {
+			name: path.basename(givenPath),
+			path: givenPath,
+			commits: [sha],
+		}
+		await database.createFile(fields)
+
+		return `Added: ${path.basename(givenPath)}`
+	} catch (error) {
+		return new Error(error)
+	}
 }
 
-const deleteFile = givenPath => {
-	return new Promise((resolve, reject) => {
+const deleteFile = async givenPath => {
+	try {
 		// Delete the file
-		fs.unlink(givenPath, err => {
-			if (err) return reject(new Error(err))
-			// Remove the file from the git index
-			stageChanges(
-				'remove',
-				repoDir(givenPath),
-				getRelFilePath(givenPath)
-			).catch(error => reject(new Error(error)))
-
-			// Commit the deleted file
-			const author = {
-				name: 'placeholder',
-				email: 'placeholder@example.com',
-			}
-			const committer = {
-				name: 'placeholder',
-				email: 'placeholder@example.com',
-			}
-			return gitCommit(
-				givenPath,
-				author,
-				committer,
-				`Deleted: ${path.basename(givenPath)}`
-			).then(() =>
-				database
-					.deleteFile(givenPath)
-					.then(() => resolve(`Deleted: ${path.basename(givenPath)}`))
-					.catch(error => reject(new Error(error)))
-			)
+		await fs.unlink(givenPath, err => {
+			if (err) throw err
 		})
-	})
+		// Remove the file from the git index
+		await stageChanges(
+			'remove',
+			repoDir(givenPath),
+			getRelFilePath(givenPath)
+		)
+
+		// Commit the deleted file
+		const author = {
+			name: 'placeholder',
+			email: 'placeholder@example.com',
+		}
+		const committer = {
+			name: 'placeholder',
+			email: 'placeholder@example.com',
+		}
+		await gitCommit(
+			givenPath,
+			author,
+			committer,
+			`Deleted: ${path.basename(givenPath)}`
+		)
+		await database.deleteFile(givenPath)
+		return `Deleted: ${path.basename(givenPath)}`
+	} catch (error) {
+		return new Error(error)
+	}
 }
 
 const getFile = givenPath => {
