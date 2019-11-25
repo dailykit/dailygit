@@ -7,7 +7,7 @@ const { CherrypickOptions, MergeOptions } = require('nodegit')
 
 git.plugins.set('fs', fs)
 
-const { repoDir } = require('../utils/parsePath')
+const { repoDir, getRelFilePath } = require('../utils/parsePath')
 
 const stageChanges = (type, dir, filepath) => {
 	return new Promise((resolve, reject) => {
@@ -54,39 +54,49 @@ const cherryPickCommit = (sha, givenPath) => {
 						cherrypickOptions
 					)
 						.then(int => resolve())
-						.catch(error => reject(new Error(error)))
+						.catch(error => reject(error))
 				})
 			})
-			.catch(error => reject(new Error(error)))
+			.catch(error => reject(error))
 	})
 }
 
-const commitToBranch = (validFor, sha, givenPath, author, committer) => {
+const checkoutBranch = (branch, givenPath) => {
 	return new Promise((resolve, reject) => {
-		validFor.forEach(async branch => {
-			await git.checkout({
-				dir: repoDir(givenPath),
-				ref: branch,
-			})
-			cherryPickCommit(sha, givenPath)
-				.then(() => {
-					gitCommit(
-						givenPath,
-						author,
-						committer,
-						`Updated: ${path.basename(
-							givenPath
-						)} file in branch ${branch}...`
-					)
-					git.checkout({
-						dir: repoDir(givenPath),
-						ref: 'master',
+		nodegit.Repository.open(repoDir(givenPath))
+			.then(repo => {
+				return repo
+					.checkoutBranch(branch, {
+						checkoutStrategy: nodegit.Checkout.STRATEGY.FORCE,
 					})
-					resolve()
-				})
-				.catch(e => reject(new Error(e)))
-		})
+					.then(() => {
+						resolve()
+					})
+					.catch(error => reject(error))
+			})
+			.catch(error => reject(error))
 	})
+}
+
+const commitToBranch = async (
+	branch,
+	sha,
+	givenPath,
+	author,
+	committer,
+	commitMessage
+) => {
+	try {
+		await checkoutBranch('master', givenPath)
+		await checkoutBranch(branch, givenPath)
+		await cherryPickCommit(sha, givenPath)
+		await stageChanges('add', repoDir(givenPath), getRelFilePath(givenPath))
+		await gitCommit(givenPath, author, committer, commitMessage)
+		await checkoutBranch('master', givenPath)
+		return `Updated ${path.basename(givenPath)} in branch ${branch}`
+	} catch (error) {
+		return new Error(error)
+	}
 }
 
 const createBranch = async (repo, name, author) => {

@@ -147,34 +147,20 @@ const searchFiles = async fileName => {
 }
 
 const updateFile = async args => {
-	const { path: givenPath, data, commitMessage, validatedFor } = args
+	const { path: givenPath, data, commitMessage } = args
 	return new Promise((resolve, reject) => {
 		fs.writeFile(givenPath, data, async err => {
 			if (err) return reject(new Error(err))
 
-			// Add the updated file to staging
-			await stageChanges(
-				'add',
-				repoDir(givenPath),
-				getRelFilePath(givenPath)
-			).catch(error => reject(new Error(error)))
+			try {
+				// Add the updated file to staging
+				await stageChanges(
+					'add',
+					repoDir(givenPath),
+					getRelFilePath(givenPath)
+				)
 
-			// Commit the staged files
-			return gitCommit(
-				givenPath,
-				{
-					name: 'placeholder',
-					email: 'placeholder@example.com',
-				},
-				{
-					name: 'placeholder',
-					email: 'placeholder@example.com',
-				},
-				commitMessage
-			).then(async sha => {
-				await database
-					.updateFile({ commit: sha, path: givenPath })
-					.catch(error => reject(new Error(error)))
+				// Commit the staged files
 				const author = {
 					name: 'placeholder',
 					email: 'placeholder@example.com',
@@ -183,20 +169,52 @@ const updateFile = async args => {
 					name: 'placeholder',
 					email: 'placeholder@example.com',
 				}
-				await commitToBranch(
-					validatedFor,
-					sha,
+				const sha = await gitCommit(
 					givenPath,
 					author,
-					committer
+					committer,
+					commitMessage
 				)
-					.then(() =>
-						resolve(`Updated: ${path.basename(givenPath)} file`)
-					)
-					.catch(error => reject(new Error(error)))
-			})
+				await database.updateFile({
+					commit: sha,
+					path: givenPath,
+				})
+				resolve(`Updated: ${path.basename(givenPath)} file`)
+			} catch (error) {
+				reject(new Error(error))
+			}
 		})
 	})
+}
+
+const updateFileInBranch = async ({ path: givenPath, branch }) => {
+	try {
+		const file = await database.readFile(givenPath)
+		const { object } = await git.readObject({
+			dir: repoDir(givenPath),
+			oid: file.commits[0],
+		})
+		const author = {
+			name: 'placeholder',
+			email: 'placeholder@example.com',
+		}
+		const committer = {
+			name: 'placeholder',
+			email: 'placeholder@example.com',
+		}
+		const result = await commitToBranch(
+			branch,
+			file.commits[0],
+			givenPath,
+			author,
+			committer,
+			object.message
+		)
+		return result
+	} catch (error) {
+		console.log(error)
+		return new Error(error)
+	}
 }
 
 const draftFile = async args => {
@@ -330,6 +348,7 @@ module.exports = {
 	deleteFile,
 	getFile,
 	updateFile,
+	updateFileInBranch,
 	renameFile,
 	searchFiles,
 	draftFile,
