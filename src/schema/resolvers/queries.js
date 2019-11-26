@@ -4,8 +4,7 @@ const fs = require('fs')
 const git = require('isomorphic-git')
 git.plugins.set('fs', fs)
 
-const folders = require('../../functions/folder')
-const files = require('../../functions/file')
+const dailygit = require('../../functions')
 
 const getFolderSize = require('../../utils/getFolderSize')
 const { getRelFilePath, repoDir } = require('../../utils/parsePath')
@@ -24,7 +23,7 @@ const resolvers = {
 	Query: {
 		getNestedFolders: async (_, args) => {
 			if (fs.existsSync(args.path)) {
-				const data = await folders
+				const data = await dailygit.folders
 					.getNestedFolders(args.path)
 					.then(response => response)
 				const withParent = {
@@ -38,7 +37,7 @@ const resolvers = {
 		},
 		getFolderWithFiles: async (_, args) => {
 			if (fs.existsSync(args.path)) {
-				const data = await folders
+				const data = await dailygit.folders
 					.getFolderWithFiles(args.path)
 					.then(response => response)
 				const folderSize = await getFolderSize(args.path)
@@ -59,7 +58,7 @@ const resolvers = {
 		},
 		getFile: async (_, args) => {
 			if (fs.existsSync(args.path)) {
-				return files
+				return dailygit.files
 					.getFile(args.path)
 					.then(success => success)
 					.catch(failure => new Error(failure))
@@ -68,7 +67,7 @@ const resolvers = {
 		},
 		openFile: (_, args) => {
 			if (fs.existsSync(args.path)) {
-				return files
+				return dailygit.files
 					.getFile(args.path)
 					.then(success => {
 						pubsub.publish(FILE_OPENED, { openFileSub: success })
@@ -79,7 +78,7 @@ const resolvers = {
 			return new Error('ENOENT')
 		},
 		searchFiles: (_, args) =>
-			files
+			dailygit.files
 				.searchFiles(args.fileName)
 				.then(data => data)
 				.catch(e => e),

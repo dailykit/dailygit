@@ -4,10 +4,7 @@ const fs = require('fs')
 const git = require('isomorphic-git')
 git.plugins.set('fs', fs)
 
-const folders = require('../../functions/folder')
-const files = require('../../functions/file')
-const database = require('../../functions/database')
-const gitFuncs = require('../../functions/git')
+const dailygit = require('../../functions')
 
 const resolvers = {
 	Mutation: {
@@ -23,7 +20,7 @@ const resolvers = {
 					),
 				}),
 			}
-			await database.createApp(options).then(result => {
+			await dailygit.database.createApp(options).then(result => {
 				docId = result.id
 			})
 
@@ -36,7 +33,7 @@ const resolvers = {
 				const { apps } = JSON.parse(args.apps)
 
 				// Update the deps of extended app.
-				await database.updateApp(apps, docId)
+				await dailygit.database.updateApp(apps, docId)
 
 				// Add Schema, Data Folder Paths
 				const addPaths = await schemas.map(folder => {
@@ -46,7 +43,7 @@ const resolvers = {
 
 				// Create data folders and initialize git
 				const addDatas = await dataFolders.map(path =>
-					folders
+					dailygit.folders
 						.createFolder(path)
 						.then(() => git.init({ dir: path }))
 						.catch(error => ({
@@ -60,7 +57,7 @@ const resolvers = {
 
 				// Create Folders with Schema Entity Files
 				const addSchemas = await schemaFolders.map(path =>
-					folders
+					dailygit.folders
 						.createFolder(path)
 						.then(() => {
 							return schemas.map(folder => {
@@ -107,7 +104,7 @@ const resolvers = {
 				const addBranches = await apps.map(app => {
 					return app.entities.map(async entity => {
 						const path = `./../apps/${app.name}/data/${entity.name}`
-						return await gitFuncs
+						return await dailygit.git
 							.createBranch(path, args.name.toLowerCase(), {
 								name: 'placeholder',
 								email: 'placeholder@example.com',
@@ -145,7 +142,7 @@ const resolvers = {
 
 				// Create data folders and initialize git
 				const addDatas = await dataFolders.map(path =>
-					folders
+					dailygit.folders
 						.createFolder(path)
 						.then(() => git.init({ dir: path }))
 						.catch(error => ({
@@ -159,7 +156,7 @@ const resolvers = {
 
 				// Create Folders with Schema Entity Files
 				const addSchemas = await schemaFolders.map(path =>
-					folders
+					dailygit.folders
 						.createFolder(path)
 						.then(() => {
 							return schemas.map(folder => {
@@ -199,13 +196,13 @@ const resolvers = {
 			if (args.type === 'dependent') {
 				const { apps } = JSON.parse(args.apps)
 				// Update the deps of extended app.
-				await database.updateApp(apps, docId)
+				await dailygit.database.updateApp(apps, docId)
 
 				// Create branch the for the app
 				const addBranches = await apps.map(app => {
 					return app.entities.map(async entity => {
 						const path = `./../apps/${app.name}/data/${entity.name}`
-						return await gitFuncs
+						return await dailygit.git
 							.createBranch(path, args.name.toLowerCase(), {
 								name: 'placeholder',
 								email: 'placeholder@example.com',
@@ -246,7 +243,7 @@ const resolvers = {
 					error: `Folder ${path.basename(args.path)} already exists!`,
 				}
 			} else {
-				return folders
+				return dailygit.folders
 					.createFolder(args.path)
 					.then(response => ({
 						success: true,
@@ -260,7 +257,7 @@ const resolvers = {
 		},
 		deleteFolder: (_, args) => {
 			if (fs.existsSync(args.path)) {
-				return folders
+				return dailygit.folders
 					.deleteFolder(args.path)
 					.then(response => ({
 						success: true,
@@ -278,7 +275,7 @@ const resolvers = {
 		},
 		renameFolder: (_, args) => {
 			if (fs.existsSync(args.oldPath)) {
-				return folders
+				return dailygit.folders
 					.renameFolder(args.oldPath, args.newPath)
 					.then(response => ({
 						success: true,
@@ -301,7 +298,7 @@ const resolvers = {
 					error: `File ${path.basename(args.path)} already exists!`,
 				}
 			}
-			return files
+			return dailygit.files
 				.createFile(args)
 				.then(response => ({
 					success: true,
@@ -314,7 +311,7 @@ const resolvers = {
 		},
 		deleteFile: (_, args) => {
 			if (fs.existsSync(args.path)) {
-				return files
+				return dailygit.files
 					.deleteFile(args.path)
 					.then(response => ({
 						success: true,
@@ -332,7 +329,7 @@ const resolvers = {
 		},
 		updateFile: async (_, args) => {
 			if (fs.existsSync(args.path)) {
-				return files
+				return dailygit.files
 					.updateFile(args)
 					.then(response => ({
 						success: true,
@@ -350,7 +347,7 @@ const resolvers = {
 		},
 		updateFileInBranch: async (_, args) => {
 			if (fs.existsSync(args.path)) {
-				return files
+				return dailygit.files
 					.updateFileInBranch(args)
 					.then(response => ({
 						success: true,
@@ -368,7 +365,7 @@ const resolvers = {
 		},
 		draftFile: async (_, args) => {
 			if (fs.existsSync(args.path)) {
-				return files
+				return dailygit.files
 					.draftFile(args)
 					.then(response => ({
 						success: true,
@@ -386,7 +383,7 @@ const resolvers = {
 		},
 		renameFile: async (_, args) => {
 			if (fs.existsSync(args.oldPath)) {
-				return files
+				return dailygit.files
 					.renameFile(args.oldPath, args.newPath)
 					.then(response => ({
 						success: true,
@@ -404,7 +401,7 @@ const resolvers = {
 		},
 		imageUpload: async (_, args) => {
 			const allFiles = await args.files
-			return files
+			return dailygit.files
 				.upload(args)
 				.then(() => ({
 					success: true,
