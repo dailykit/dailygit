@@ -183,6 +183,36 @@ const createBranch = async (repo, name, author) => {
 	}
 }
 
+const deleteFileFromBranch = (filePath, branch) => {
+	return new Promise((resolve, reject) => {
+		// Checkout to branch
+		git.checkout({ dir: repoDir(filePath), ref: branch })
+		setTimeout(() => {
+			// Delete File
+			if (fs.existsSync(filePath)) {
+				fs.unlink(filePath, error => {
+					if (error) return reject('No such folder or file exists!')
+					const author = {
+						name: 'placeholder',
+						email: 'placeholder@example.com',
+					}
+					const committer = {
+						name: 'placeholder',
+						email: 'placeholder@example.com',
+					}
+					return removeAndCommit(filePath, author, committer)
+				})
+			}
+
+			// Checkout to master
+			git.checkout({ dir: repoDir(filePath), ref: 'master' })
+			return resolve(
+				`Deleted ${path.basename(filePath)} from branch ${branch}`
+			)
+		}, 500)
+	})
+}
+
 module.exports = {
 	stageChanges,
 	gitCommit,
@@ -191,4 +221,5 @@ module.exports = {
 	createBranch,
 	addAndCommit,
 	removeAndCommit,
+	deleteFileFromBranch,
 }
