@@ -14,81 +14,34 @@ const {
 } = require('../utils/parsePath')
 const { stageChanges, commitToBranch, gitCommit } = require('./git')
 
-const createFile = async ({ path: givenPath, content }) => {
-	try {
-		// Check if entity folder exists
-		if (!fs.existsSync(path.dirname(givenPath))) {
-			return `Entity folder doesn't exist`
+const createFile = ({ path: filePath, content }) => {
+	return new Promise((resolve, reject) => {
+		if (!fs.existsSync(filePath)) {
+			return fs.writeFile(
+				filePath,
+				JSON.stringify(content, null, 2),
+				error => {
+					if (error) return reject('No such folder or file exists!')
+					return resolve(
+						`File ${path.basename(filePath)} has been created`
+					)
+				}
+			)
 		}
-		// Create the file
-		await fs.writeFileSync(givenPath, JSON.stringify(content, null, 2))
-
-		// Stage the file
-		await stageChanges('add', repoDir(givenPath), getRelFilePath(givenPath))
-
-		// Commit the file
-		const author = {
-			name: 'placeholder',
-			email: 'placeholder@example.com',
-		}
-		const committer = {
-			name: 'placeholder',
-			email: 'placeholder@example.com',
-		}
-		const sha = await gitCommit(
-			givenPath,
-			author,
-			committer,
-			`Added: ${path.basename(givenPath)}`
-		)
-
-		// Add the file to db document
-		const fields = {
-			name: path.basename(givenPath),
-			path: givenPath,
-			commits: [sha],
-		}
-		await database.createFile(fields)
-
-		return `Added: ${path.basename(givenPath)}`
-	} catch (error) {
-		return new Error(error)
-	}
+		return reject(`File ${path.basename(filePath)} already exists`)
+	})
 }
 
-const deleteFile = async givenPath => {
-	try {
-		// Delete the file
-		await fs.unlink(givenPath, err => {
-			if (err) throw err
-		})
-		// Remove the file from the git index
-		await stageChanges(
-			'remove',
-			repoDir(givenPath),
-			getRelFilePath(givenPath)
-		)
-
-		// Commit the deleted file
-		const author = {
-			name: 'placeholder',
-			email: 'placeholder@example.com',
+const deleteFile = async filePath => {
+	return new Promise((resolve, reject) => {
+		if (fs.existsSync(filePath)) {
+			fs.unlink(filePath, error => {
+				if (error) return reject('No such folder or file exists!')
+				return resolve(`Deleted: ${path.basename(filePath)}`)
+			})
 		}
-		const committer = {
-			name: 'placeholder',
-			email: 'placeholder@example.com',
-		}
-		await gitCommit(
-			givenPath,
-			author,
-			committer,
-			`Deleted: ${path.basename(givenPath)}`
-		)
-		await database.deleteFile(givenPath)
-		return `Deleted: ${path.basename(givenPath)}`
-	} catch (error) {
-		return new Error(error)
-	}
+		return reject(`File ${path.basename(filePath)} doesn't exists`)
+	})
 }
 
 const getFile = givenPath => {

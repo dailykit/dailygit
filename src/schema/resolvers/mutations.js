@@ -291,40 +291,76 @@ const resolvers = {
 				error: `Folder ${path.basename(args.oldPath)} doesn't exists!`,
 			}
 		},
-		createFile: (_, args) => {
-			if (fs.existsSync(args.path)) {
+		createFile: async (_, args) => {
+			try {
+				// Filesystem
+				await dailygit.files.createFile(args)
+
+				// Git
+				const author = {
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				}
+				const committer = {
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				}
+				const sha = await dailygit.git.addAndCommit(
+					args.path,
+					author,
+					committer
+				)
+
+				// Database
+				await dailygit.database.createFile({
+					name: path.basename(args.path),
+					path: args.path,
+					commits: [sha],
+				})
+
+				return {
+					success: true,
+					message: `File ${path.basename(
+						args.path
+					)} has been created`,
+				}
+			} catch (error) {
 				return {
 					success: false,
-					error: `File ${path.basename(args.path)} already exists!`,
+					error,
 				}
 			}
-			return dailygit.files
-				.createFile(args)
-				.then(response => ({
-					success: true,
-					message: response,
-				}))
-				.catch(failure => ({
-					success: false,
-					error: new Error(failure),
-				}))
 		},
-		deleteFile: (_, args) => {
-			if (fs.existsSync(args.path)) {
-				return dailygit.files
-					.deleteFile(args.path)
-					.then(response => ({
-						success: true,
-						message: response,
-					}))
-					.catch(failure => ({
-						success: false,
-						error: new Error(failure),
-					}))
-			}
-			return {
-				success: false,
-				error: `File ${path.basename(args.path)} doesn't exists!`,
+		deleteFile: async (_, args) => {
+			try {
+				// Filesystem
+				await dailygit.files.deleteFile(args.path)
+
+				// Git
+				const author = {
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				}
+				const committer = {
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				}
+				await dailygit.git.removeAndCommit(args.path, author, committer)
+
+				// Database
+				await dailygit.database.deleteFile(args.path)
+
+				return {
+					success: true,
+					message: `File ${path.basename(
+						args.path
+					)} has been deleted`,
+				}
+			} catch (error) {
+				return {
+					success: false,
+					error,
+				}
 			}
 		},
 		updateFile: async (_, args) => {
