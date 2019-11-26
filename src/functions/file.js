@@ -35,7 +35,7 @@ const createFile = ({ path: filePath, content }) => {
 const deleteFile = async filePath => {
 	return new Promise((resolve, reject) => {
 		if (fs.existsSync(filePath)) {
-			fs.unlink(filePath, error => {
+			return fs.unlink(filePath, error => {
 				if (error) return reject('No such folder or file exists!')
 				return resolve(`Deleted: ${path.basename(filePath)}`)
 			})
