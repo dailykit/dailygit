@@ -27,6 +27,44 @@ const stageChanges = (type, dir, filepath) => {
 	})
 }
 
+const addAndCommit = async (givenPath, author, committer) => {
+	try {
+		await git.add({
+			dir: repoDir(givenPath),
+			filepath: getRelFilePath(givenPath),
+		})
+		const sha = git.commit({
+			dir: repoDir(givenPath),
+			author,
+			committer,
+			message: `Added: ${path.basename(givenPath)}`,
+		})
+
+		return sha
+	} catch (error) {
+		throw error
+	}
+}
+
+const removeAndCommit = async (givenPath, author, committer) => {
+	try {
+		await git.remove({
+			dir: repoDir(givenPath),
+			filepath: getRelFilePath(givenPath),
+		})
+		const sha = git.commit({
+			dir: repoDir(givenPath),
+			author,
+			committer,
+			message: `Deleted: ${path.basename(givenPath)}`,
+		})
+
+		return sha
+	} catch (error) {
+		throw error
+	}
+}
+
 const gitCommit = (givenPath, author, committer, message) => {
 	return git
 		.commit({
@@ -151,4 +189,6 @@ module.exports = {
 	cherryPickCommit,
 	commitToBranch,
 	createBranch,
+	addAndCommit,
+	removeAndCommit,
 }
