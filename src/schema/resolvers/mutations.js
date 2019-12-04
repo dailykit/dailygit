@@ -6,6 +6,12 @@ git.plugins.set('fs', fs)
 
 const dailygit = require('../../functions')
 
+const {
+	addDataFolders,
+	addExtendedSchemaFiles,
+	addSchemaFolders,
+} = require('../../utils/installApp')
+
 const resolvers = {
 	Mutation: {
 		installApp: async (_, args) => {
@@ -23,183 +29,85 @@ const resolvers = {
 				.createApp(options)
 				.then(result => result.id)
 
-			// Hybrid App
-			if (args.type === 'hybrid') {
-				const appPath = `./../apps/${args.name}`
-				const dataFolders = []
-				const schemaFolders = []
-				const { schemas } = JSON.parse(args.schemas)
-				const { apps } = JSON.parse(args.apps)
+			const appPath = `./../apps/${args.name}`
+			const dataFolders = []
+			const schemaFolders = []
+			const { schemas } = args.schemas ? JSON.parse(args.schemas) : {}
+			const { apps } = args.apps ? JSON.parse(args.apps) : {}
 
-				// Update the deps of extended app.
-				await dailygit.database.updateApp(apps, docId)
-
+			if (args.type === 'hybrid' || args.type === 'independent') {
 				// Add Schema, Data Folder Paths
-				const addPaths = await schemas.map(folder => {
+				await schemas.map(folder => {
 					schemaFolders.push(`${appPath}/schema/${folder.path}`)
 					dataFolders.push(`${appPath}/data/${folder.path}`)
 				})
+			}
 
-				// Create data folders and initialize git
-				const addDatas = await dataFolders.map(path =>
-					dailygit.folders
-						.createFolder(path)
-						.then(() => git.init({ dir: path }))
-						.catch(error => ({
-							success: false,
-							error: new Error(error),
-						}))
-				)
+			// Hybrid App
+			if (args.type === 'hybrid') {
+				try {
+					// Update the deps of extended app.
+					await dailygit.database.updateApp(apps, docId)
 
-				const folderPath = (folderName, folderPath) =>
-					`${appPath}/${folderName}/${folderPath}`
+					// Create data folders and initialize git
+					await addDataFolders(dataFolders)
 
-				// Create Folders with Schema Entity Files
-				const addSchemas = await schemaFolders.map(path =>
-					dailygit.folders
-						.createFolder(path)
-						.then(() => {
-							return schemas.map(folder => {
-								return folder.entities.map(file => {
-									const filepath = `${folderPath(
-										'schema',
-										folder.path
-									)}/${file.name}.json`
-									return fs.writeFile(
-										filepath,
-										JSON.stringify(file.content, null, 2),
-										error => {
-											if (error)
-												return {
-													success: false,
-													error: new Error(error),
-												}
-										}
-									)
-								})
-							})
-						})
-						.catch(error => ({
-							success: false,
-							error: new Error(error),
-						}))
-				)
+					// Create Folders with Schema Entity Files
+					await addSchemaFolders(schemaFolders, schemas, appPath)
 
-				// Update the parent app's dependencies
-				const extendSchemas = await apps.map(app => {
-					return app.entities.map(entity => {
-						const path = `./../apps/${app.name}/schema/${entity.name}/ext.${args.name}.json`
-						return fs.writeFile(
-							path,
-							JSON.stringify(entity.schema, null, 2),
-							error => {
-								if (error) return new Error(error)
-							}
-						)
-					})
-				})
+					// Create Extendend Schema File
+					await addExtendedSchemaFiles(apps, args.name)
 
-				return Promise.all([
-					addPaths,
-					addDatas,
-					addSchemas,
-					extendSchemas,
-				]).then(() => ({
-					success: true,
-					message: `App ${args.name} is installed!`,
-				}))
+					return {
+						success: true,
+						message: `App ${args.name} is installed!`,
+					}
+				} catch (error) {
+					return {
+						success: false,
+						error: `App ${args.name} did not install correctly!`,
+					}
+				}
 			}
 			// Independent App
 			if (args.type === 'independent') {
-				const appPath = `./../apps/${args.name}`
-				const dataFolders = []
-				const schemaFolders = []
-				const { schemas } = JSON.parse(args.schemas)
+				try {
+					// Create data folders and initialize git
+					await addDataFolders(dataFolders)
 
-				// Add Schema, Data Folder Paths
-				const addPaths = await schemas.map(folder => {
-					schemaFolders.push(`${appPath}/schema/${folder.path}`)
-					dataFolders.push(`${appPath}/data/${folder.path}`)
-				})
+					// Create Folders with Schema Entity Files
+					await addSchemaFolders(schemaFolders, schemas, appPath)
 
-				// Create data folders and initialize git
-				const addDatas = await dataFolders.map(path =>
-					dailygit.folders
-						.createFolder(path)
-						.then(() => git.init({ dir: path }))
-						.catch(error => ({
-							success: false,
-							error: new Error(error),
-						}))
-				)
-
-				const folderPath = (folderName, folderPath) =>
-					`${appPath}/${folderName}/${folderPath}`
-
-				// Create Folders with Schema Entity Files
-				const addSchemas = await schemaFolders.map(path =>
-					dailygit.folders
-						.createFolder(path)
-						.then(() => {
-							return schemas.map(folder => {
-								return folder.entities.map(file => {
-									const filepath = `${folderPath(
-										'schema',
-										folder.path
-									)}/${file.name}.json`
-									return fs.writeFile(
-										filepath,
-										JSON.stringify(file.content, null, 2),
-										error => {
-											if (error)
-												return {
-													success: false,
-													error: new Error(error),
-												}
-										}
-									)
-								})
-							})
-						})
-						.catch(error => ({
-							success: false,
-							error: new Error(error),
-						}))
-				)
-
-				return Promise.all([addPaths, addDatas, addSchemas]).then(
-					() => ({
+					return {
 						success: true,
 						message: `App ${args.name} is installed!`,
-					})
-				)
+					}
+				} catch (error) {
+					return {
+						success: false,
+						error: `App ${args.name} did not install correctly!`,
+					}
+				}
 			}
 			// Dependent App
 			if (args.type === 'dependent') {
-				const { apps } = JSON.parse(args.apps)
-				// Update the deps of extended app.
-				await dailygit.database.updateApp(apps, docId)
+				try {
+					// Update the deps of extended app.
+					await dailygit.database.updateApp(apps, docId)
 
-				// Update the parent app's dependencies
-				const addSchemas = await apps.map(app => {
-					return app.entities.map(entity => {
-						const path = `./../apps/${app.name}/schema/${entity.name}/ext.${args.name}.json`
-						return fs.writeFile(
-							path,
-							JSON.stringify(entity.schema, null, 2),
-							error => {
-								if (error) return new Error(error)
-							}
-						)
-					})
-				})
+					// Create Extendend Schema File
+					await addExtendedSchemaFiles(apps, args.name)
 
-				return Promise.all([addSchemas])
-					.then(() => ({
+					return {
 						success: true,
 						message: `App ${args.name} is installed!`,
-					}))
-					.catch(error => console.log(error))
+					}
+				} catch (error) {
+					return {
+						success: false,
+						error: `App ${args.name} did not install correctly!`,
+					}
+				}
 			}
 		},
 		createFolder: (_, args) => {
