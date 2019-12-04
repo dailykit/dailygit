@@ -168,7 +168,7 @@ const resolvers = {
 		createFile: async (_, args) => {
 			try {
 				// Filesystem
-				await dailygit.files.createFile(args)
+				await dailygit.files.createFile(args.path, args.content)
 
 				// Git
 				const author = {
@@ -182,7 +182,8 @@ const resolvers = {
 				const sha = await dailygit.git.addAndCommit(
 					args.path,
 					author,
-					committer
+					committer,
+					`Added: ${path.basename(args.path)}`
 				)
 
 				// Database

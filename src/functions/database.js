@@ -30,12 +30,17 @@ const createFile = fields => {
 			const repoName = getRepoName(fields.path)
 			const Model = mongoose.model(repoName, fileSchema)
 
-			const file = new Model(fields)
+			Model.findOne({ path: fields.path }, error => {
+				if (!error)
+					return reject(`DB - File: ${fields.name} already exists!`)
 
-			// Save file as document
-			return file.save(error => {
-				if (error) return reject(new Error(error))
-				return resolve(`File ${fields.name} has been saved!`)
+				const file = new Model(fields)
+
+				// Save file as document
+				return file.save(error => {
+					if (error) return reject(new Error(error))
+					return resolve(`File ${fields.name} has been saved!`)
+				})
 			})
 		})
 	})

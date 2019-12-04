@@ -14,21 +14,24 @@ const {
 } = require('../utils/parsePath')
 const { stageChanges, gitCommit } = require('./git')
 
-const createFile = ({ path: filePath, content }) => {
+const createFile = (filePath, content) => {
 	return new Promise((resolve, reject) => {
 		if (!fs.existsSync(filePath)) {
 			return fs.writeFile(
 				filePath,
 				JSON.stringify(content, null, 2),
 				error => {
-					if (error) return reject('No such folder or file exists!')
+					if (error)
+						return reject(
+							`File: ${path.basename(filePath)} doesn't exist!`
+						)
 					return resolve(
 						`File ${path.basename(filePath)} has been created`
 					)
 				}
 			)
 		}
-		return reject(`File ${path.basename(filePath)} already exists`)
+		return reject(`File: ${path.basename(filePath)} already exists!`)
 	})
 }
 
