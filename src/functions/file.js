@@ -101,44 +101,15 @@ const searchFiles = async fileName => {
 	})
 }
 
-const updateFile = async args => {
-	const { path: givenPath, data, commitMessage } = args
+const updateFile = async (filePath, content) => {
 	return new Promise((resolve, reject) => {
-		fs.writeFile(givenPath, data, async err => {
-			if (err) return reject(new Error(err))
-
-			try {
-				// Add the updated file to staging
-				await stageChanges(
-					'add',
-					repoDir(givenPath),
-					getRelFilePath(givenPath)
-				)
-
-				// Commit the staged files
-				const author = {
-					name: 'placeholder',
-					email: 'placeholder@example.com',
-				}
-				const committer = {
-					name: 'placeholder',
-					email: 'placeholder@example.com',
-				}
-				const sha = await gitCommit(
-					givenPath,
-					author,
-					committer,
-					commitMessage
-				)
-				await database.updateFile({
-					commit: sha,
-					path: givenPath,
-				})
-				resolve(`Updated: ${path.basename(givenPath)} file`)
-			} catch (error) {
-				reject(new Error(error))
-			}
-		})
+		if (fs.existsSync(filePath)) {
+			return fs.writeFile(filePath, content, async err => {
+				if (err) return reject(new Error(err))
+				resolve(`Updated: ${path.basename(filePath)} file`)
+			})
+		}
+		return reject(`File ${path.basename(filePath)} doesn't exists`)
 	})
 }
 

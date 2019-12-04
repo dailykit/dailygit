@@ -90,10 +90,7 @@ const updateFile = fields => {
 				const Model = mongoose.model(repoName, fileSchema)
 
 				// Find file doc by path
-				const query = {
-					path: fields.path,
-				}
-				Model.findOne(query, (error, file) => {
+				Model.findOne({ path: fields.path }, (error, file) => {
 					if (error) return reject(new Error(error))
 					const data = {
 						...(fields.newPath && {

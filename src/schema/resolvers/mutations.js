@@ -239,21 +239,44 @@ const resolvers = {
 			}
 		},
 		updateFile: async (_, args) => {
-			if (fs.existsSync(args.path)) {
-				return dailygit.files
-					.updateFile(args)
-					.then(response => ({
-						success: true,
-						message: response,
-					}))
-					.catch(failure => ({
-						success: false,
-						error: new Error(failure),
-					}))
-			}
-			return {
-				success: false,
-				error: `File ${path.basename(args.path)} doesn't exists!`,
+			try {
+				// File System
+				await dailygit.files.updateFile(args.path, args.content)
+
+				// Git
+				const author = {
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				}
+				const committer = {
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				}
+
+				const sha = await dailygit.git.addAndCommit(
+					args.path,
+					author,
+					committer,
+					args.message
+				)
+
+				// Database
+				await dailygit.database.updateFile({
+					commit: sha,
+					path: args.path,
+				})
+
+				return {
+					success: true,
+					message: `File: ${path.basename(
+						args.path
+					)} has been updated!`,
+				}
+			} catch (error) {
+				return {
+					success: false,
+					error,
+				}
 			}
 		},
 		draftFile: async (_, args) => {

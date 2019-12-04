@@ -7,7 +7,7 @@ const mutations = gql`
 		renameFolder(oldPath: String!, newPath: String!): Result
 		createFile(path: String, content: String): Result
 		deleteFile(path: String): Result
-		updateFile(path: String!, data: String!, commitMessage: String!): Result
+		updateFile(path: String!, content: String!, message: String!): Result
 		draftFile(path: String!, data: String!): Result
 		renameFile(oldPath: String!, newPath: String!): Result
 		installApp(
