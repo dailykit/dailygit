@@ -117,58 +117,24 @@ const renameFile = async (oldPath, newPath) => {
 	return new Promise((resolve, reject) => {
 		// Check if newPath file exists
 		if (oldPath === newPath) {
-			return resolve("New name can't be the same old name!")
-		} else if (fs.existsSync(newPath)) {
-			return resolve('File already exists!')
+			return reject("New name and old name can't be same")
 		}
 
-		// Rename File
-		fs.rename(oldPath, newPath, async err => {
-			if (err) return reject(new Error(err))
+		if (fs.existsSync(newPath)) {
+			return reject(`File ${path.basename(newPath)} already exists`)
+		}
 
-			// Remove the old file from git index
-			stageChanges(
-				'remove',
-				repoDir(oldPath),
-				getRelFilePath(oldPath)
-			).catch(error => reject(new Error(error)))
-
-			// Add the renamed file to staging
-			stageChanges(
-				'add',
-				repoDir(oldPath),
-				getRelFilePath(newPath)
-			).catch(error => reject(new Error(error)))
-
-			// Commit the staged files
-			const author = {
-				name: 'placeholder',
-				email: 'placeholder@example.com',
-			}
-			const committer = {
-				name: 'placeholder',
-				email: 'placeholder@example.com',
-			}
-			return gitCommit(
-				oldPath,
-				author,
-				committer,
-				`Renamed: ${path.basename(oldPath)} file to ${path.basename(
-					newPath
-				)}`
-			).then(sha =>
-				database
-					.updateFile({ commit: sha, path: oldPath, newPath })
-					.then(() =>
-						resolve(
-							`Renamed: ${path.basename(
-								oldPath
-							)} file to ${path.basename(newPath)}`
-						)
-					)
-					.catch(error => reject(new Error(error)))
-			)
-		})
+		if (fs.existsSync(oldPath)) {
+			return fs.rename(oldPath, newPath, err => {
+				if (err) return reject(new Error(err))
+				return resolve(
+					`Renamed: ${path.basename(oldPath)} file to ${path.basename(
+						newPath
+					)}`
+				)
+			})
+		}
+		return reject(`File ${path.basename(oldPath)} already exists`)
 	})
 }
 

@@ -12,6 +12,8 @@ const {
 	addSchemaFolders,
 } = require('../../utils/installApp')
 
+const { repoDir, getRelFilePath } = require('../../utils/parsePath')
+
 const resolvers = {
 	Mutation: {
 		installApp: async (_, args) => {
@@ -303,21 +305,52 @@ const resolvers = {
 			}
 		},
 		renameFile: async (_, args) => {
-			if (fs.existsSync(args.oldPath)) {
-				return dailygit.files
-					.renameFile(args.oldPath, args.newPath)
-					.then(response => ({
-						success: true,
-						message: response,
-					}))
-					.catch(failure => ({
-						success: false,
-						error: new Error(failure),
-					}))
-			}
-			return {
-				success: false,
-				error: `File ${path.basename(args.oldPath)} doesn't exists!`,
+			try {
+				// File System
+				await dailygit.files.renameFile(args.oldPath, args.newPath)
+
+				// Git
+				const author = {
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				}
+				const committer = {
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				}
+
+				await git.remove({
+					dir: repoDir(args.oldPath),
+					filepath: getRelFilePath(args.oldPath),
+				})
+
+				const sha = await dailygit.git.addAndCommit(
+					args.newPath,
+					author,
+					committer,
+					`Renamed: ${path.basename(
+						args.oldPath
+					)} file to ${path.basename(args.newPath)}`
+				)
+
+				// Database
+				await dailygit.database.updateFile({
+					commit: sha,
+					path: args.oldPath,
+					newPath: args.newPath,
+				})
+
+				return {
+					success: true,
+					message: `File: ${path.basename(
+						args.oldPath
+					)} renamed to ${path.basename(args.newPath)}`,
+				}
+			} catch (error) {
+				return {
+					success: false,
+					error,
+				}
 			}
 		},
 		imageUpload: async (_, args) => {
