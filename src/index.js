@@ -8,23 +8,23 @@ const http = require('http')
 const schema = require('./schema/schema')
 
 const PORT = 4000
+const production = process.env.NODE_ENV === 'production' ? true : false
+
 const apolloserver = new ApolloServer({
 	schema,
 	playground: {
 		endpoint: `${
-			process.env.NODE_ENV === 'production'
-				? process.env.INST_URI
-				: 'http://localhost:'
+			production ? process.env.INST_URI : 'http://localhost:'
 		}${PORT}/graphql`,
 	},
-	introspection: process.env.NODE_ENV === 'production' ? false : true,
+	introspection: production ? false : true,
 	validationRules: [depthLimit(11)],
 	formatError: err => {
 		if (err.message.includes('ENOENT'))
 			return new Error('No such folder or file exists!')
-		return new Error(err)
+		return production ? new Error(err) : err
 	},
-	debug: false,
+	debug: production ? false : true,
 })
 
 const app = express()

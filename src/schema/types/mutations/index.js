@@ -8,7 +8,6 @@ const mutations = gql`
 		createFile(path: String, content: String): Result
 		deleteFile(path: String): Result
 		updateFile(path: String!, data: String!, commitMessage: String!): Result
-		updateFileInBranch(path: String!, branch: String!): Result
 		draftFile(path: String!, data: String!): Result
 		renameFile(oldPath: String!, newPath: String!): Result
 		installApp(

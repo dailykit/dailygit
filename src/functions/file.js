@@ -12,7 +12,7 @@ const {
 	getAppName,
 	baseFolder,
 } = require('../utils/parsePath')
-const { stageChanges, commitToBranch, gitCommit } = require('./git')
+const { stageChanges, gitCommit } = require('./git')
 
 const createFile = ({ path: filePath, content }) => {
 	return new Promise((resolve, reject) => {
@@ -140,35 +140,6 @@ const updateFile = async args => {
 			}
 		})
 	})
-}
-
-const updateFileInBranch = async ({ path: givenPath, branch }) => {
-	try {
-		const file = await database.readFile(givenPath)
-		const { object } = await git.readObject({
-			dir: repoDir(givenPath),
-			oid: file.commits[0],
-		})
-		const author = {
-			name: 'placeholder',
-			email: 'placeholder@example.com',
-		}
-		const committer = {
-			name: 'placeholder',
-			email: 'placeholder@example.com',
-		}
-		const result = await commitToBranch(
-			branch,
-			file.commits[0],
-			givenPath,
-			author,
-			committer,
-			object.message
-		)
-		return result
-	} catch (error) {
-		return new Error(error)
-	}
 }
 
 const draftFile = async args => {
@@ -306,7 +277,6 @@ module.exports = {
 	deleteFile,
 	getFile,
 	updateFile,
-	updateFileInBranch,
 	renameFile,
 	searchFiles,
 	draftFile,

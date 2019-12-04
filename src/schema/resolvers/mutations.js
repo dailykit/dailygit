@@ -9,8 +9,6 @@ const dailygit = require('../../functions')
 const resolvers = {
 	Mutation: {
 		installApp: async (_, args) => {
-			let docId = ''
-
 			// Add the app to installed list in DB
 			const options = {
 				name: args.name,
@@ -20,9 +18,10 @@ const resolvers = {
 					),
 				}),
 			}
-			await dailygit.database.createApp(options).then(result => {
-				docId = result.id
-			})
+
+			const docId = await dailygit.database
+				.createApp(options)
+				.then(result => result.id)
 
 			// Hybrid App
 			if (args.type === 'hybrid') {
@@ -100,28 +99,11 @@ const resolvers = {
 					})
 				})
 
-				// Create branch the for the app
-				const addBranches = await apps.map(app => {
-					return app.entities.map(async entity => {
-						const path = `./../apps/${app.name}/data/${entity.name}`
-						return await dailygit.git
-							.createBranch(path, args.name.toLowerCase(), {
-								name: 'placeholder',
-								email: 'placeholder@example.com',
-							})
-							.catch(error => ({
-								success: false,
-								error: new Error(error),
-							}))
-					})
-				})
-
 				return Promise.all([
 					addPaths,
 					addDatas,
 					addSchemas,
 					extendSchemas,
-					addBranches,
 				]).then(() => ({
 					success: true,
 					message: `App ${args.name} is installed!`,
@@ -198,22 +180,6 @@ const resolvers = {
 				// Update the deps of extended app.
 				await dailygit.database.updateApp(apps, docId)
 
-				// Create branch the for the app
-				const addBranches = await apps.map(app => {
-					return app.entities.map(async entity => {
-						const path = `./../apps/${app.name}/data/${entity.name}`
-						return await dailygit.git
-							.createBranch(path, args.name.toLowerCase(), {
-								name: 'placeholder',
-								email: 'placeholder@example.com',
-							})
-							.catch(error => ({
-								success: false,
-								error: new Error(error),
-							}))
-					})
-				})
-
 				// Update the parent app's dependencies
 				const addSchemas = await apps.map(app => {
 					return app.entities.map(entity => {
@@ -228,7 +194,7 @@ const resolvers = {
 					})
 				})
 
-				return Promise.all([addBranches, addSchemas])
+				return Promise.all([addSchemas])
 					.then(() => ({
 						success: true,
 						message: `App ${args.name} is installed!`,
@@ -359,7 +325,7 @@ const resolvers = {
 			} catch (error) {
 				return {
 					success: false,
-					error,
+					error: new Error(error),
 				}
 			}
 		},
@@ -367,24 +333,6 @@ const resolvers = {
 			if (fs.existsSync(args.path)) {
 				return dailygit.files
 					.updateFile(args)
-					.then(response => ({
-						success: true,
-						message: response,
-					}))
-					.catch(failure => ({
-						success: false,
-						error: new Error(failure),
-					}))
-			}
-			return {
-				success: false,
-				error: `File ${path.basename(args.path)} doesn't exists!`,
-			}
-		},
-		updateFileInBranch: async (_, args) => {
-			if (fs.existsSync(args.path)) {
-				return dailygit.files
-					.updateFileInBranch(args)
 					.then(response => ({
 						success: true,
 						message: response,
