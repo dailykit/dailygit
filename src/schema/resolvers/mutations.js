@@ -354,19 +354,52 @@ const resolvers = {
 			}
 		},
 		imageUpload: async (_, args) => {
-			const allFiles = await args.files
-			return dailygit.files
-				.upload(args)
-				.then(() => ({
+			try {
+				const { files } = await args
+				const author = {
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				}
+				const committer = {
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				}
+
+				await Object.keys(files).map(async key => {
+					// File System
+					const file = await files[key]
+					await dailygit.files.upload(args.path, file)
+
+					// Git
+					const sha = await dailygit.git.addAndCommit(
+						args.path,
+						author,
+						committer,
+						`Uploaded: ${files.length} file${
+							files.length > 1 ? 's' : ''
+						}`
+					)
+
+					// Database
+					const { filename } = await file
+					await dailygit.database.createFile({
+						name: filename,
+						path: `${args.path}/${filename}`,
+						commits: [sha],
+					})
+				})
+				return {
 					success: true,
-					message: `${allFiles.length} file${
-						allFiles.length > 1 ? 's' : ''
+					message: `${files.length} file${
+						files.length > 1 ? 's' : ''
 					} has been uploaded`,
-				}))
-				.catch(failure => ({
+				}
+			} catch (error) {
+				return {
 					success: false,
-					error: new Error(failure),
-				}))
+					error,
+				}
+			}
 		},
 	},
 }

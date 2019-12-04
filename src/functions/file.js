@@ -138,61 +138,18 @@ const renameFile = async (oldPath, newPath) => {
 	})
 }
 
-const upload = async args => {
-	const files = await args.files
-	const uploadAll = await Object.keys(files).map(async key => {
-		const { createReadStream, filename } = await files[key]
+const upload = async (filePath, file) => {
+	return new Promise((resolve, reject) => {
+		const { createReadStream, filename } = file
 		const stream = createReadStream()
-		return new Promise((resolve, reject) => {
-			return stream
-				.on('error', error => {
-					fs.unlink(`${args.path}/${filename}`, () => {
-						reject(new Error(error))
-					})
-				})
-				.pipe(fs.createWriteStream(`${args.path}/${filename}`))
-				.on('error', error => reject(new Error(error)))
-				.on('finish', () => {
-					// Stage the file
-					stageChanges(
-						'add',
-						repoDir(args.path),
-						getRelFilePath(`${args.path}/${filename}`)
-					).catch(error => reject(new Error(error)))
-
-					// Commit the file
-					const author = {
-						name: 'placeholder',
-						email: 'placeholder@example.com',
-					}
-					const committer = {
-						name: 'placeholder',
-						email: 'placeholder@example.com',
-					}
-					return gitCommit(
-						args.path,
-						author,
-						committer,
-						`Added: ${filename}`
-					)
-						.then(sha => {
-							const fields = {
-								name: filename,
-								path: `${args.path}/${filename}`,
-								commits: [sha],
-							}
-
-							// Add the file to db document
-							return database
-								.createFile(fields)
-								.then(() => resolve())
-								.catch(error => reject(new Error(error)))
-						})
-						.catch(error => reject(new Error(error)))
-				})
-		})
+		return stream
+			.on('error', error => {
+				fs.unlinkSync(`${filePath}/${filename}`)
+				return reject(new Error(error))
+			})
+			.pipe(fs.createWriteStream(`${filePath}/${filename}`))
+			.on('finish', () => resolve())
 	})
-	return Promise.all(uploadAll)
 }
 
 module.exports = {
