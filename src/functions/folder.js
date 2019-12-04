@@ -80,11 +80,11 @@ const getFolderWithFiles = async url => {
 const createFolder = givenPath => {
 	return new Promise((resolve, reject) => {
 		if (fs.existsSync(givenPath)) {
-			return reject(`Folder ${path.basename(givenPath)}  already exist!`)
+			return reject(`Folder: ${path.basename(givenPath)} already exist!`)
 		}
 		return fs.mkdir(givenPath, { recursive: true }, error => {
 			if (error) return reject(new Error(error))
-			return resolve(`Created: ${path.basename(givenPath)} Folder!`)
+			return resolve()
 		})
 	})
 }

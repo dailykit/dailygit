@@ -112,23 +112,20 @@ const resolvers = {
 				}
 			}
 		},
-		createFolder: (_, args) => {
-			if (fs.existsSync(args.path)) {
+		createFolder: async (_, args) => {
+			try {
+				await dailygit.folders.createFolder(args.path)
+				return {
+					success: true,
+					message: `Folder: ${path.basename(
+						args.path
+					)} has been created!`,
+				}
+			} catch (error) {
 				return {
 					success: false,
-					error: `Folder ${path.basename(args.path)} already exists!`,
+					error,
 				}
-			} else {
-				return dailygit.folders
-					.createFolder(args.path)
-					.then(response => ({
-						success: true,
-						message: response,
-					}))
-					.catch(failure => ({
-						success: false,
-						error: new Error(failure),
-					}))
 			}
 		},
 		deleteFolder: (_, args) => {
