@@ -234,7 +234,7 @@ const resolvers = {
 			} catch (error) {
 				return {
 					success: false,
-					error: new Error(error),
+					error,
 				}
 			}
 		},

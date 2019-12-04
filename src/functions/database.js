@@ -26,49 +26,50 @@ const createFile = fields => {
 	return new Promise((resolve, reject) => {
 		// Connect to database
 		const dbName = getAppName(fields.path)
-		return connectToDB(dbName).then(() => {
-			const repoName = getRepoName(fields.path)
-			const Model = mongoose.model(repoName, fileSchema)
+		return connectToDB(dbName)
+			.then(() => {
+				const repoName = getRepoName(fields.path)
+				const Model = mongoose.model(repoName, fileSchema)
 
-			Model.findOne({ path: fields.path }, error => {
-				if (!error)
-					return reject(`DB - File: ${fields.name} already exists!`)
+				Model.findOne({ path: fields.path }, (error, result) => {
+					if (result)
+						return reject(`File: ${fields.name} already exists!`)
 
-				const file = new Model(fields)
+					const file = new Model(fields)
 
-				// Save file as document
-				return file.save(error => {
-					if (error) return reject(new Error(error))
-					return resolve(`File ${fields.name} has been saved!`)
+					// Save file as document
+					return file.save(error => {
+						if (error) return reject(new Error(error))
+						return resolve(`File ${fields.name} has been saved!`)
+					})
 				})
 			})
-		})
+			.catch(error => reject(new Error(error)))
 	})
 }
 
-const deleteFile = givenPath => {
+const deleteFile = filePath => {
 	return new Promise((resolve, reject) => {
 		// Connect to database
-		const dbName = getAppName(givenPath)
+		const dbName = getAppName(filePath)
 		return connectToDB(dbName)
 			.then(() => {
-				const repoName = getRepoName(givenPath)
+				const repoName = getRepoName(filePath)
 
 				// Create Model
 				const Model = mongoose.model(repoName, fileSchema)
 
 				// Find file doc by path
-				const query = {
-					path: givenPath,
-				}
-				Model.findOne(query, (error, file) => {
-					if (error) return reject(new Error(error))
-
+				Model.findOne({ path: filePath }, (error, file) => {
+					if (error)
+						return reject(
+							`File: ${path.basename(filePath)} doesn't exists!`
+						)
 					// Delete file doc using Id
 					return Model.findByIdAndDelete(file.id, error => {
 						if (error) return reject(new Error(error))
 						return resolve(
-							`File ${path.basename(givenPath)} has been deleted!`
+							`File ${path.basename(filePath)} has been deleted!`
 						)
 					})
 				})

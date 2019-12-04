@@ -16,22 +16,19 @@ const { stageChanges, gitCommit } = require('./git')
 
 const createFile = (filePath, content) => {
 	return new Promise((resolve, reject) => {
-		if (!fs.existsSync(filePath)) {
-			return fs.writeFile(
-				filePath,
-				JSON.stringify(content, null, 2),
-				error => {
-					if (error)
-						return reject(
-							`File: ${path.basename(filePath)} doesn't exist!`
-						)
-					return resolve(
-						`File ${path.basename(filePath)} has been created`
-					)
-				}
-			)
+		if (fs.existsSync(filePath)) {
+			return reject(`File: ${path.basename(filePath)} already exists!`)
 		}
-		return reject(`File: ${path.basename(filePath)} already exists!`)
+		return fs.writeFile(
+			filePath,
+			JSON.stringify(content, null, 2),
+			error => {
+				if (error) return reject(new Error(error))
+				return resolve(
+					`File ${path.basename(filePath)} has been created`
+				)
+			}
+		)
 	})
 }
 
@@ -39,7 +36,7 @@ const deleteFile = async filePath => {
 	return new Promise((resolve, reject) => {
 		if (fs.existsSync(filePath)) {
 			return fs.unlink(filePath, error => {
-				if (error) return reject('No such folder or file exists!')
+				if (error) return reject(new Error(error))
 				return resolve(`Deleted: ${path.basename(filePath)}`)
 			})
 		}
