@@ -104,26 +104,12 @@ const searchFiles = async fileName => {
 const updateFile = async (filePath, content) => {
 	return new Promise((resolve, reject) => {
 		if (fs.existsSync(filePath)) {
-			return fs.writeFile(filePath, content, async err => {
+			return fs.writeFile(filePath, content, err => {
 				if (err) return reject(new Error(err))
 				resolve(`Updated: ${path.basename(filePath)} file`)
 			})
 		}
 		return reject(`File ${path.basename(filePath)} doesn't exists`)
-	})
-}
-
-const draftFile = async args => {
-	const { path: givenPath, data } = args
-	return new Promise((resolve, reject) => {
-		fs.writeFile(givenPath, data, async err => {
-			if (err) return reject(new Error(err))
-			return database
-				.updateFile({ path: givenPath, lastSaved: Date.now() })
-				.then(() =>
-					resolve(`File ${path.basename(givenPath)} has been saved!`)
-				)
-		})
 	})
 }
 
@@ -250,6 +236,5 @@ module.exports = {
 	updateFile,
 	renameFile,
 	searchFiles,
-	draftFile,
 	upload,
 }

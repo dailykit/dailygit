@@ -280,21 +280,26 @@ const resolvers = {
 			}
 		},
 		draftFile: async (_, args) => {
-			if (fs.existsSync(args.path)) {
-				return dailygit.files
-					.draftFile(args)
-					.then(response => ({
-						success: true,
-						message: response,
-					}))
-					.catch(failure => ({
-						success: false,
-						error: new Error(failure),
-					}))
-			}
-			return {
-				success: false,
-				error: `File ${path.basename(args.path)} doesn't exists!`,
+			try {
+				// File System
+				await dailygit.files.updateFile(args.path, args.content)
+
+				// Database
+				await dailygit.database.updateFile({
+					path: args.path,
+					lastSaved: Date.now(),
+				})
+				return {
+					success: true,
+					message: `File: ${path.basename(
+						args.path
+					)} has been updated!`,
+				}
+			} catch (error) {
+				return {
+					success: false,
+					error,
+				}
 			}
 		},
 		renameFile: async (_, args) => {
