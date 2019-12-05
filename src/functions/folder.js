@@ -104,71 +104,18 @@ const renameFolder = (oldPath, newPath) => {
 	return new Promise((resolve, reject) => {
 		// Check if newPath file exists
 		if (oldPath === newPath) {
-			return resolve("New name can't be the same old name!")
-		} else if (fs.existsSync(newPath)) {
-			return resolve('Folder already exists!')
+			return reject("New name and old name can't be same!")
 		}
-
-		// Get list of all file paths in before renaming folder
-		const oldFilePaths = getPathsOfAllFilesInFolder(oldPath).then(
-			files => files
-		)
-		fs.rename(oldPath, newPath, async error => {
-			if (error) return reject(new Error(error))
-
-			// Get list of all file paths in renamed folder
-			const newFilePaths = await getPathsOfAllFilesInFolder(newPath).then(
-				files => files
-			)
-
-			// Remove all the old files from git index
-			for (let oldFilePath of oldFilePaths) {
-				stageChanges(
-					'remove',
-					repoDir(oldPath),
-					getRelFilePath(oldFilePath)
-				).catch(error => reject(new Error(error)))
-			}
-
-			// Add all the new files to staging and commit them
-			const author = {
-				name: 'placeholder',
-				email: 'placeholder@example.com',
-			}
-			const committer = {
-				name: 'placeholder',
-				email: 'placeholder@example.com',
-			}
-			for (let newFilePath of newFilePaths) {
-				stageChanges(
-					'add',
-					repoDir(oldPath),
-					getRelFilePath(newFilePath)
-				).catch(error => reject(new Error(error)))
-				git.commit({
-					dir: repoDir(oldPath),
-					author,
-					committer,
-					message: `Renamed: Parent folder from ${path.basename(
-						oldPath
-					)} to ${path.basename(newPath)}`,
-				}).then(sha =>
-					database
-						.updateFile({
-							commit: sha,
-							path:
-								oldFilePaths[newFilePaths.indexOf(newFilePath)],
-							newPath: newFilePath,
-						})
-						.catch(error => reject(new Error(error)))
-				)
-			}
-			resolve(
-				`Renamed: From ${path.basename(oldPath)} to ${path.basename(
-					newPath
-				)}`
-			)
-		})
+		if (fs.existsSync(newPath)) {
+			return reject('Folder already exists!')
+		}
+		if (fs.existsSync(oldPath)) {
+			return fs.rename(oldPath, newPath, async error => {
+				if (error) return reject(new Error(error))
+				return resolve()
+			})
+		}
+		return reject(`Folder: ${path.basename(oldPath)} doesn't exists!`)
 	})
 }
 

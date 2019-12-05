@@ -172,22 +172,59 @@ const resolvers = {
 				}
 			}
 		},
-		renameFolder: (_, args) => {
-			if (fs.existsSync(args.oldPath)) {
-				return dailygit.folders
-					.renameFolder(args.oldPath, args.newPath)
-					.then(response => ({
-						success: true,
-						message: response,
-					}))
-					.catch(failure => ({
-						success: false,
-						error: new Error(failure),
-					}))
-			}
-			return {
-				success: false,
-				error: `Folder ${path.basename(args.oldPath)} doesn't exists!`,
+		renameFolder: async (_, args) => {
+			try {
+				const oldFiles = await getFilePaths(args.oldPath)
+
+				// File System
+				await dailygit.folders.renameFolder(args.oldPath, args.newPath)
+
+				// Git
+				const newFiles = await getFilePaths(args.newPath)
+				const author = {
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				}
+				const committer = {
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				}
+
+				await oldFiles.map(filePath => {
+					return git.remove({
+						dir: repoDir(args.oldPath),
+						filepath: getRelFilePath(filePath),
+					})
+				})
+
+				await newFiles.map(async filePath => {
+					const sha = await dailygit.git.addAndCommit(
+						filePath,
+						author,
+						committer,
+						`Moved: ${path.basename(filePath)} from ${path.basename(
+							args.oldPath
+						)} to ${path.basename(args.newPath)}`
+					)
+
+					// Database
+					return dailygit.database.updateFile({
+						commit: sha,
+						path: oldFiles[newFiles.indexOf(filePath)],
+						newPath: filePath,
+					})
+				})
+				return {
+					success: true,
+					message: `Folder ${path.basename(
+						args.oldPath
+					)} renamed to ${path.basename(args.newPath)}`,
+				}
+			} catch (error) {
+				return {
+					success: false,
+					error,
+				}
 			}
 		},
 		createFile: async (_, args) => {
