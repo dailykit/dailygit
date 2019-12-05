@@ -14,6 +14,8 @@ const {
 
 const { repoDir, getRelFilePath } = require('../../utils/parsePath')
 
+const getFilePaths = require('../../utils/getFilePaths')
+
 const resolvers = {
 	Mutation: {
 		installApp: async (_, args) => {
@@ -128,22 +130,46 @@ const resolvers = {
 				}
 			}
 		},
-		deleteFolder: (_, args) => {
-			if (fs.existsSync(args.path)) {
-				return dailygit.folders
-					.deleteFolder(args.path)
-					.then(response => ({
-						success: true,
-						message: response,
-					}))
-					.catch(failure => ({
-						success: false,
-						error: new Error(failure),
-					}))
-			}
-			return {
-				success: false,
-				error: `Folder ${path.basename(args.path)} doesn't exists!`,
+		deleteFolder: async (_, args) => {
+			const files = await getFilePaths(args.path)
+
+			try {
+				// File System
+				await dailygit.folders.deleteFolder(args.path)
+
+				const author = {
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				}
+				const committer = {
+					name: 'placeholder',
+					email: 'placeholder@example.com',
+				}
+
+				await files.map(async filePath => {
+					// Git
+					await dailygit.git.removeAndCommit(
+						filePath,
+						author,
+						committer,
+						`Deleted: File ${path.basename(filePath)}`
+					)
+
+					// Database
+					await dailygit.database.deleteFile(filePath)
+				})
+
+				return {
+					success: true,
+					message: `Folder: ${path.basename(
+						args.path
+					)} has been deleted!`,
+				}
+			} catch (error) {
+				return {
+					success: false,
+					error,
+				}
 			}
 		},
 		renameFolder: (_, args) => {

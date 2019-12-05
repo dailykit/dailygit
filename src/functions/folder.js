@@ -2,8 +2,6 @@ const fs = require('fs')
 const path = require('path')
 const rimraf = require('rimraf')
 
-const getFilesRecursively = require('recursive-readdir')
-
 const git = require('isomorphic-git')
 git.plugins.set('fs', fs)
 
@@ -89,46 +87,16 @@ const createFolder = givenPath => {
 	})
 }
 
-const deleteFolder = givenPath => {
+const deleteFolder = filePath => {
 	return new Promise((resolve, reject) => {
-		// Get all file paths from the folder
-		const allFilePaths = getPathsOfAllFilesInFolder(givenPath).then(
-			files => files
-		)
-
-		// Delete the folder
-		rimraf(givenPath, error => {
-			if (error) return reject(new Error(error))
-			for (let file of allFilePaths) {
-				// Remove files from git index
-				stageChanges(
-					'remove',
-					repoDir(givenPath),
-					getRelFilePath(file)
-				).catch(error => reject(new Error(error)))
-
-				// Commit the deleted files
-				const author = {
-					name: 'placeholder',
-					email: 'placeholder@example.com',
-				}
-				const committer = {
-					name: 'placeholder',
-					email: 'placeholder@example.com',
-				}
-				git.commit({
-					dir: repoDir(givenPath),
-					author,
-					committer,
-					message: `Deleted: File ${path.basename(file)}`,
-				}).then(() =>
-					database
-						.deleteFile(file)
-						.catch(error => reject(new Error(error)))
-				)
-			}
-			resolve(`Deleted : ${path.basename(givenPath)} folder`)
-		})
+		if (fs.existsSync(filePath)) {
+			// Delete the folder
+			return rimraf(filePath, error => {
+				if (error) return reject(new Error(error))
+				return resolve()
+			})
+		}
+		return reject(`Folder: ${path.basename(filePath)} doesn't exist!`)
 	})
 }
 
@@ -200,19 +168,6 @@ const renameFolder = (oldPath, newPath) => {
 					newPath
 				)}`
 			)
-		})
-	})
-}
-
-const getPathsOfAllFilesInFolder = async givenPath => {
-	function ignoreFunc(file) {
-		return path.basename(file) === '.git'
-	}
-	return new Promise((resolve, reject) => {
-		getFilesRecursively(givenPath, [ignoreFunc], (err, files) => {
-			if (err) return reject(new Error(err))
-			const result = files.map(file => `./${file.split('\\').join('/')}`)
-			return resolve(result)
 		})
 	})
 }
