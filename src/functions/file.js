@@ -6,13 +6,7 @@ git.plugins.set('fs', fs)
 
 const database = require('./database')
 
-const {
-	getRelFilePath,
-	repoDir,
-	getAppName,
-	baseFolder,
-} = require('../utils/parsePath')
-const { stageChanges, gitCommit } = require('./git')
+const { getAppName, baseFolder } = require('../utils/parsePath')
 
 const createFile = (filePath, content) => {
 	return new Promise((resolve, reject) => {
