@@ -9,7 +9,6 @@ const schema = require('./schema/schema')
 
 const PORT = 4000
 const production = process.env.NODE_ENV === 'production' ? true : false
-
 const apolloserver = new ApolloServer({
 	schema,
 	playground: {
@@ -21,7 +20,9 @@ const apolloserver = new ApolloServer({
 	validationRules: [depthLimit(11)],
 	formatError: err => {
 		if (err.message.includes('ENOENT'))
-			return new Error('No such folder or file exists!')
+			return production
+				? new Error('No such folder or file exists!')
+				: err
 		return production ? new Error(err) : err
 	},
 	debug: production ? false : true,
