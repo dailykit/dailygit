@@ -38,29 +38,15 @@ const deleteFile = async filePath => {
 	})
 }
 
-const getFile = givenPath => {
+const getFile = filePath => {
 	return new Promise((resolve, reject) => {
-		const stats = fs.statSync(givenPath)
-		const parse = path.parse(givenPath)
-		fs.readFile(givenPath, (error, data) => {
-			if (error) reject(new Error(error))
-			return database
-				.readFile(givenPath)
-				.then(doc => {
-					const file = {
-						name: parse.name,
-						path: givenPath,
-						size: stats.size,
-						createdAt: stats.birthtime,
-						type: 'file',
-						content: data.toString(),
-						commits: doc.commits,
-						lastSaved: doc.lastSaved,
-					}
-					return resolve(file)
-				})
-				.catch(error => reject(new Error(error)))
-		})
+		if (fs.existsSync(filePath)) {
+			return fs.readFile(filePath, (error, file) => {
+				if (error) reject(new Error(error))
+				return resolve(file)
+			})
+		}
+		return reject(`File: ${path.basename(filePath)} doesn't exists!`)
 	})
 }
 

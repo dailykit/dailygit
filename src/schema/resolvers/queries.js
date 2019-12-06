@@ -57,13 +57,26 @@ const resolvers = {
 			return new Error('ENOENT')
 		},
 		getFile: async (_, args) => {
-			if (fs.existsSync(args.path)) {
-				return dailygit.files
-					.getFile(args.path)
-					.then(success => success)
-					.catch(failure => new Error(failure))
+			const stats = await fs.statSync(args.path)
+			try {
+				const fs = await dailygit.files.getFile(args.path)
+				const db = await dailygit.database.readFile(args.path)
+
+				const file = {
+					name: path.basename(args.path),
+					path: args.path,
+					size: stats.size,
+					createdAt: stats.birthtime,
+					type: 'file',
+					content: fs.toString(),
+					commits: db.commits,
+					lastSaved: db.lastSaved || '',
+				}
+
+				return file
+			} catch (error) {
+				return error
 			}
-			return new Error('ENOENT')
 		},
 		openFile: (_, args) => {
 			if (fs.existsSync(args.path)) {
