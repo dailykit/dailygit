@@ -9,6 +9,8 @@ const dailygit = require('../../functions')
 const getFolderSize = require('../../utils/getFolderSize')
 const { getRelFilePath, repoDir } = require('../../utils/parsePath')
 
+const getFilePaths = require('../../utils/getFilePaths')
+
 const { PubSub } = require('apollo-server')
 const pubsub = new PubSub()
 
@@ -54,6 +56,19 @@ const resolvers = {
 					createdAt: fs.statSync(args.path).birthtime,
 				}
 				return folders
+			} catch (error) {
+				return error
+			}
+		},
+		getFiles: async (_, args) => {
+			try {
+				const files = await getFilePaths(args.path)
+				const result = await files.map(file =>
+					resolvers.Query.getFile('', {
+						path: file,
+					})
+				)
+				return result
 			} catch (error) {
 				return error
 			}
