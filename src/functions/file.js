@@ -4,8 +4,6 @@ const getFilesRecursively = require('recursive-readdir')
 const git = require('isomorphic-git')
 git.plugins.set('fs', fs)
 
-const database = require('./database')
-
 const { getAppName, baseFolder } = require('../utils/parsePath')
 
 const createFile = (filePath, content) => {

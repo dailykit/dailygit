@@ -8,11 +8,6 @@ git.plugins.set('fs', fs)
 const files = require('./file')
 const getFolderSize = require('../utils/getFolderSize')
 
-const database = require('./database')
-
-const { getRelFilePath, repoDir } = require('../utils/parsePath')
-const { stageChanges } = require('./git')
-
 const getNestedFolders = async url => {
 	try {
 		let content = await fs.readdirSync(url)
@@ -52,14 +47,12 @@ const getFolderWithFiles = async url => {
 				node.createdAt = stats.birthtime
 				if (stats.isFile()) {
 					const fileData = await files.getFile(`${url}/${item}`)
-					node.content = fileData.content
+					node.content = fileData.toString()
 					node.size = stats.size
 					node.type = 'file'
 				} else if (stats.isDirectory()) {
-					let functionResponse = await getFolderWithFiles(
-						`${url}/${item}`
-					)
-					node.children = functionResponse
+					let folders = await getFolderWithFiles(`${url}/${item}`)
+					node.children = folders
 					node.type = 'folder'
 					const folderSize = await getFolderSize(`${url}/${item}`)
 						.filter(Boolean)
