@@ -8,13 +8,17 @@ const getFilePaths = async givenPath => {
 			const ignoreFunc = file => {
 				return path.basename(file) === '.git'
 			}
-			getFilesRecursively(givenPath, [ignoreFunc], (err, files) => {
-				if (err) return reject(new Error(err))
-				const result = files.map(
-					file => `./${file.split('\\').join('/')}`
-				)
-				return resolve(result)
-			})
+			return getFilesRecursively(
+				givenPath,
+				[ignoreFunc],
+				(err, files) => {
+					if (err) return reject(new Error(err))
+					const result = files.map(
+						file => `./${file.split('\\').join('/')}`
+					)
+					return resolve(result)
+				}
+			)
 		}
 		return reject(`Folder: ${path.basename(givenPath)} doesn't exists!`)
 	})
