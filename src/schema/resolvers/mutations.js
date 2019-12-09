@@ -469,10 +469,41 @@ const resolvers = {
 				)
 
 				// Database
-				await dailygit.database.updateFile({
-					commit: sha,
-					path: args.oldPath,
-					newPath: args.newPath,
+				await dailygit.database.updateFile(
+					{
+						commit: sha,
+						path: args.oldPath,
+						newPath: args.newPath,
+					},
+					getAppName(args.oldPath)
+				)
+
+				const { dependents } = await dailygit.database.readApp(
+					getAppName(args.oldPath)
+				)
+
+				await dependents.map(async dependent => {
+					try {
+						const file = await dailygit.database.fileExists(
+							{
+								path: args.oldPath,
+							},
+							dependent.name
+						)
+						if (file) {
+							return await dailygit.database.updateFile(
+								{
+									commit: sha,
+									path: args.oldPath,
+									newPath: args.newPath,
+								},
+								dependent.name
+							)
+						}
+						return
+					} catch (error) {
+						throw error
+					}
 				})
 
 				return {
