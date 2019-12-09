@@ -12,7 +12,7 @@ const {
 	addSchemaFolders,
 } = require('../../utils/installApp')
 
-const { repoDir, getRelFilePath } = require('../../utils/parsePath')
+const { repoDir, getRelFilePath, getAppName } = require('../../utils/parsePath')
 
 const getFilePaths = require('../../utils/getFilePaths')
 
@@ -249,11 +249,14 @@ const resolvers = {
 				)
 
 				// Database
-				await dailygit.database.createFile({
-					name: path.basename(args.path),
-					path: args.path,
-					commits: [sha],
-				})
+				await dailygit.database.createFile(
+					{
+						name: path.basename(args.path),
+						path: args.path,
+						commits: [sha],
+					},
+					getAppName(args.path)
+				)
 
 				return {
 					success: true,
@@ -323,9 +326,54 @@ const resolvers = {
 				)
 
 				// Database
-				await dailygit.database.updateFile({
-					commit: sha,
-					path: args.path,
+				await dailygit.database.updateFile(
+					{
+						commit: sha,
+						path: args.path,
+					},
+					getAppName(args.path)
+				)
+
+				// Update dependents if any
+				const { dependents } = await dailygit.database.readApp(
+					getAppName(args.path)
+				)
+				await dependents.map(async dependent => {
+					try {
+						const exists = await dailygit.database.fileExists(
+							{
+								path: args.path,
+							},
+							dependent.name
+						)
+
+						if (exists) {
+							return await dailygit.database.updateFile(
+								{
+									commit: sha,
+									path: args.path,
+								},
+								dependent.name
+							)
+						} else {
+							const mainFile = await dailygit.database.readFile(
+								{
+									path: args.path,
+								},
+								getAppName(args.path)
+							)
+							return await dailygit.database.createFile(
+								{
+									name: mainFile.name,
+									path: mainFile.path,
+									commits: mainFile.commits,
+								},
+								dependent.name
+							)
+						}
+					} catch (error) {
+						throw error
+					}
 				})
 
 				return {
@@ -442,11 +490,14 @@ const resolvers = {
 
 					// Database
 					const { filename } = await file
-					await dailygit.database.createFile({
-						name: filename,
-						path: `${args.path}/${filename}`,
-						commits: [sha],
-					})
+					await dailygit.database.createFile(
+						{
+							name: filename,
+							path: `${args.path}/${filename}`,
+							commits: [sha],
+						},
+						getAppName(args.path)
+					)
 				})
 				return {
 					success: true,
