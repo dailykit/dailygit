@@ -3,6 +3,8 @@ const path = require('path')
 
 const fileSchema = require('../models/File')
 
+const App = require('../models/App')
+
 const { getAppName, getRepoName } = require('../utils/parsePath')
 
 const connectToDB = dbName => {
@@ -18,49 +20,54 @@ const connectToDB = dbName => {
 			.catch(error => reject(new Error(error)))
 	})
 }
+
 // Create file document
-const createDoc = fields => {
+const createFile = (fields, db) => {
 	return new Promise((resolve, reject) => {
 		// Connect to database
-		const dbName = getAppName(fields.path)
-		return connectToDB(dbName).then(() => {
-			const repoName = getRepoName(fields.path)
-			const Model = mongoose.model(repoName, fileSchema)
+		return connectToDB(db)
+			.then(() => {
+				const repoName = getRepoName(fields.path)
+				const Model = mongoose.model(repoName, fileSchema)
 
-			const file = new Model(fields)
+				Model.findOne({ path: fields.path }, (error, result) => {
+					if (result)
+						return reject(`File: ${fields.name} already exists!`)
 
-			// Save file as document
-			return file.save((error, result) => {
-				if (error) return reject(new Error(error))
-				return resolve(`File ${fields.name} has been saved!`)
+					const file = new Model(fields)
+
+					// Save file as document
+					return file.save(error => {
+						if (error) return reject(new Error(error))
+						return resolve(`File ${fields.name} has been saved!`)
+					})
+				})
 			})
-		})
+			.catch(error => reject(new Error(error)))
 	})
 }
 
-const deleteDoc = givenPath => {
+const deleteFile = (filePath, db) => {
 	return new Promise((resolve, reject) => {
 		// Connect to database
-		const dbName = getAppName(givenPath)
-		return connectToDB(dbName)
+		return connectToDB(db)
 			.then(() => {
-				const repoName = getRepoName(givenPath)
+				const repoName = getRepoName(filePath)
 
 				// Create Model
 				const Model = mongoose.model(repoName, fileSchema)
 
 				// Find file doc by path
-				const query = {
-					path: givenPath,
-				}
-				Model.findOne(query, (error, file) => {
-					if (error) return reject(new Error(error))
-
+				Model.findOne({ path: filePath }, (error, file) => {
+					if (error)
+						return reject(
+							`File: ${path.basename(filePath)} doesn't exists!`
+						)
 					// Delete file doc using Id
 					return Model.findByIdAndDelete(file.id, error => {
 						if (error) return reject(new Error(error))
 						return resolve(
-							`File ${path.basename(givenPath)} has been deleted!`
+							`File ${path.basename(filePath)} has been deleted!`
 						)
 					})
 				})
@@ -69,11 +76,10 @@ const deleteDoc = givenPath => {
 	})
 }
 
-const updateDoc = fields => {
+const updateFile = (fields, db) => {
 	return new Promise((resolve, reject) => {
 		// Connect to database
-		const dbName = getAppName(fields.path)
-		return connectToDB(dbName)
+		return connectToDB(db)
 			.then(() => {
 				const repoName = getRepoName(fields.path)
 
@@ -81,10 +87,7 @@ const updateDoc = fields => {
 				const Model = mongoose.model(repoName, fileSchema)
 
 				// Find file doc by path
-				const query = {
-					path: fields.path,
-				}
-				Model.findOne(query, (error, file) => {
+				Model.findOne({ path: fields.path }, (error, file) => {
 					if (error) return reject(new Error(error))
 					const data = {
 						...(fields.newPath && {
@@ -95,6 +98,9 @@ const updateDoc = fields => {
 						}),
 						...(fields.commit && {
 							commits: [fields.commit, ...file.commits],
+						}),
+						...(fields.lastSaved && {
+							lastSaved: fields.lastSaved,
 						}),
 						updatedAt: Date.now(),
 					}
@@ -119,11 +125,10 @@ const updateDoc = fields => {
 	})
 }
 
-const readDoc = path => {
+const readFile = ({ path }, db) => {
 	return new Promise((resolve, reject) => {
 		// Connect to database
-		const dbName = getAppName(path)
-		return connectToDB(dbName)
+		return connectToDB(db)
 			.then(() => {
 				const repoName = getRepoName(path)
 
@@ -132,7 +137,7 @@ const readDoc = path => {
 
 				// Find file doc by path
 				const query = {
-					path: path,
+					path,
 				}
 				Model.findOne(query, (error, file) => {
 					if (error) return reject(new Error(error))
@@ -143,9 +148,89 @@ const readDoc = path => {
 	})
 }
 
+const fileExists = ({ path: filePath }, db) => {
+	return new Promise((resolve, reject) => {
+		// Connect to database
+		return connectToDB(db)
+			.then(() => {
+				const repoName = getRepoName(filePath)
+
+				// Create Model
+				const Model = mongoose.model(repoName, fileSchema)
+
+				// Find file doc by path
+				const query = {
+					path: filePath,
+				}
+				Model.findOne(query, (error, file) => {
+					if (error) return resolve(false)
+					return resolve(file)
+				})
+			})
+			.catch(error => reject(new Error(error)))
+	})
+}
+
+const createApp = ({ name, entities }) => {
+	return new Promise((resolve, reject) => {
+		return connectToDB('apps').then(() => {
+			const app = new App({
+				name: name,
+				dependents: [],
+				status: 'active',
+				...(entities && { entities: entities }),
+			})
+
+			// Save file as document
+			return app.save((error, result) => {
+				if (error) return reject(new Error(error))
+				return resolve(result)
+			})
+		})
+	})
+}
+
+const updateApp = (apps, appID) => {
+	return new Promise((resolve, reject) => {
+		return connectToDB('apps').then(() => {
+			apps.map(app => {
+				App.findOne({ name: app.name }, (error, doc) => {
+					if (error) return reject(new Error(error))
+					App.findByIdAndUpdate(
+						{ _id: doc.id },
+						{ $push: { dependents: appID } },
+						{ new: true },
+						(error, doc) => {
+							if (error) return reject(new Error(error))
+							return resolve(doc)
+						}
+					)
+				})
+			})
+		})
+	})
+}
+
+const readApp = name => {
+	return new Promise((resolve, reject) => {
+		return connectToDB('apps').then(() => {
+			App.findOne({ name })
+				.populate('dependents')
+				.exec((error, doc) => {
+					if (error) return reject(new Error(error))
+					return resolve(doc)
+				})
+		})
+	})
+}
+
 module.exports = {
-	createDoc,
-	deleteDoc,
-	updateDoc,
-	readDoc,
+	createFile,
+	deleteFile,
+	updateFile,
+	readFile,
+	createApp,
+	updateApp,
+	readApp,
+	fileExists,
 }

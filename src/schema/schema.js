@@ -1,17 +1,28 @@
 const { makeExecutableSchema } = require('graphql-tools')
 
 // Import Schema Types
-const types = require('./typeDefs/index')
-
-// Import Schema Types
-const mutations = require('./mutations/index')
+const {
+	queryTypes,
+	mutationTypes,
+	subscriptionTypes,
+	scalarTypes,
+} = require('./types/index')
 
 // Import Schema Resolvers
-const resolvers = require('./resolvers/index')
+const {
+	queries: queryResolvers,
+	scalars: scalarResolvers,
+	mutations: mutationResolvers,
+} = require('./resolvers/index')
 
+// Compose Schema
 const schema = makeExecutableSchema({
-	typeDefs: [types, mutations],
-	resolvers,
+	typeDefs: [queryTypes, mutationTypes, subscriptionTypes, scalarTypes],
+	resolvers: {
+		...queryResolvers,
+		...scalarResolvers,
+		...mutationResolvers,
+	},
 })
 
 module.exports = schema

@@ -26,21 +26,20 @@ const typeDefs = gql`
 		size: Int
 		createdAt: String
 		commits: [String]
+		lastSaved: String
 	}
-
 	type Author {
 		name: String
 		email: String
 		timestamp: String
 	}
-
 	type Committer {
 		name: String
 		email: String
 		timestamp: String
 	}
-
 	type Commit {
+		oid: String
 		message: String
 		tree: String
 		parent: [String]
@@ -56,15 +55,7 @@ const typeDefs = gql`
 		success: Boolean
 		error: String
 	}
-	type Query {
-		getFolderWithFiles(path: String): FolderWithFiles
-		getNestedFolders(path: String): Folder
-		getFile(path: String!): File
-		searchFiles(fileName: String!): String
-		getCommitLog(path: String!): [Commit]
-		getCommits(path: String!, commits: [String]!): [Commit]
-		getCommit(id: String!, path: String!): Commit
-	}
+	scalar Upload
 `
 
 module.exports = typeDefs
