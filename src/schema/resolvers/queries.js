@@ -9,6 +9,8 @@ const dailygit = require('../../functions')
 const getFolderSize = require('../../utils/getFolderSize')
 const { getRelFilePath, repoDir } = require('../../utils/parsePath')
 
+const getFilePaths = require('../../utils/getFilePaths')
+
 const { PubSub } = require('apollo-server')
 const pubsub = new PubSub()
 
@@ -22,107 +24,145 @@ const resolvers = {
 	},
 	Query: {
 		getNestedFolders: async (_, args) => {
-			if (fs.existsSync(args.path)) {
-				const data = await dailygit.folders
-					.getNestedFolders(args.path)
-					.then(response => response)
-				const withParent = {
+			try {
+				const data = await dailygit.folders.getNestedFolders(args.path)
+				const folders = {
 					name: path.parse(args.path).name,
 					path: args.path,
 					children: data,
 				}
-				return withParent
+				return folders
+			} catch (error) {
+				return error
 			}
-			return new Error('ENOENT')
 		},
 		getFolderWithFiles: async (_, args) => {
-			if (fs.existsSync(args.path)) {
-				const data = await dailygit.folders
-					.getFolderWithFiles(args.path)
-					.then(response => response)
+			try {
+				const data = await dailygit.folders.getFolderWithFiles(
+					args.path
+				)
+
 				const folderSize = await getFolderSize(args.path)
 					.filter(Boolean)
 					.map(file => fs.readFileSync(file))
 					.join('\n')
-				const withParent = {
-					name: path.parse(args.path).name,
+
+				const folders = {
+					name: path.basename(args.path),
 					type: 'folder',
 					path: args.path,
 					size: folderSize.length,
 					children: data,
 					createdAt: fs.statSync(args.path).birthtime,
 				}
-				return withParent
+				return folders
+			} catch (error) {
+				return error
 			}
-			return new Error('ENOENT')
+		},
+		getFiles: async (_, args) => {
+			try {
+				const files = await getFilePaths(args.path)
+				const result = await files.map(file =>
+					resolvers.Query.getFile('', {
+						path: file,
+					})
+				)
+				return result
+			} catch (error) {
+				return error
+			}
 		},
 		getFile: async (_, args) => {
-			if (fs.existsSync(args.path)) {
-				return dailygit.files
-					.getFile(args.path)
-					.then(success => success)
-					.catch(failure => new Error(failure))
+			const stats = await fs.statSync(args.path)
+			try {
+				const fs = await dailygit.files.getFile(args.path)
+				const db = await dailygit.database.readFile(args.path)
+
+				const file = {
+					name: path.basename(args.path),
+					path: args.path,
+					size: stats.size,
+					createdAt: stats.birthtime,
+					type: 'file',
+					content: fs.toString(),
+					commits: db.commits,
+					lastSaved: db.lastSaved || '',
+				}
+
+				return file
+			} catch (error) {
+				return error
 			}
-			return new Error('ENOENT')
 		},
-		openFile: (_, args) => {
-			if (fs.existsSync(args.path)) {
-				return dailygit.files
-					.getFile(args.path)
-					.then(success => {
-						pubsub.publish(FILE_OPENED, { openFileSub: success })
-						return success
-					})
-					.catch(failure => new Error(failure))
+		openFile: async (_, args) => {
+			try {
+				const file = await resolvers.Query.getFile('', {
+					path: args.path,
+				})
+				await pubsub.publish(FILE_OPENED, { openFileSub: file })
+				return file
+			} catch (error) {
+				return error
 			}
-			return new Error('ENOENT')
 		},
-		searchFiles: (_, args) =>
-			dailygit.files
-				.searchFiles(args.fileName)
-				.then(data => data)
-				.catch(e => e),
-		getCommitLog: (_, { path: repoDir }) => {
-			return git
-				.log({
+		searchFiles: async (_, args) => {
+			try {
+				const files = await dailygit.files.searchFiles(args.fileName)
+				return files
+			} catch (error) {
+				return error
+			}
+		},
+		getCommitLog: async (_, { path: repoDir }) => {
+			try {
+				const log = await git.log({
 					dir: repoDir,
 					depth: 10,
 					ref: 'master',
 				})
-				.then(list => list)
-				.catch(error => new Error(error))
+				return log
+			} catch (error) {
+				return error
+			}
 		},
-		getCommit: (_, { id, path: repoDir }) => {
-			return git
-				.readObject({
+		getCommit: async (_, { id, path: repoDir }) => {
+			try {
+				const { object } = await git.readObject({
 					dir: repoDir,
 					oid: id,
 				})
-				.then(({ object }) => object)
-				.catch(error => new Error(error))
+				return object
+			} catch (error) {
+				return error
+			}
 		},
 		getCommits: async (_, { path, commits }) => {
-			const results = await commits.map(commit =>
-				git
-					.readObject({
+			try {
+				const results = await commits.map(async commit => {
+					const { object } = await git.readObject({
 						dir: path,
 						oid: commit,
 					})
-					.then(({ object }) => object)
-					.catch(error => new Error(error))
-			)
-			return Promise.all(results).then(data => data)
+					return object
+				})
+				return results
+			} catch (error) {
+				return error
+			}
 		},
-		getCommitContent: (_, { id, path }) => {
-			return git
-				.readObject({
-					dir: repoDir(path),
-					oid: id,
-					filepath: getRelFilePath(path),
+		getCommitContent: async (_, args) => {
+			try {
+				const { object } = await git.readObject({
+					dir: repoDir(args.path),
+					oid: args.id,
+					filepath: getRelFilePath(args.path),
 					encoding: 'utf8',
 				})
-				.then(({ object }) => object)
-				.catch(error => new Error(error))
+				return object
+			} catch (error) {
+				return error
+			}
 		},
 	},
 }
