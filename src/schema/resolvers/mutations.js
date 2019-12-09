@@ -227,22 +227,66 @@ const resolvers = {
 				})
 
 				await newFiles.map(async filePath => {
-					const sha = await dailygit.git.addAndCommit(
-						filePath,
-						author,
-						committer,
-						`Moved: ${path.basename(filePath)} from ${path.basename(
-							args.oldPath
-						)} to ${path.basename(args.newPath)}`
-					)
+					try {
+						const sha = await dailygit.git.addAndCommit(
+							filePath,
+							author,
+							committer,
+							`Moved: ${path.basename(
+								filePath
+							)} from ${path.basename(
+								args.oldPath
+							)} to ${path.basename(args.newPath)}`
+						)
 
-					// Database
-					return dailygit.database.updateFile({
-						commit: sha,
-						path: oldFiles[newFiles.indexOf(filePath)],
-						newPath: filePath,
-					})
+						// Database
+						await dailygit.database.updateFile(
+							{
+								commit: sha,
+								path: oldFiles[newFiles.indexOf(filePath)],
+								newPath: filePath,
+							},
+							getAppName(filePath)
+						)
+
+						const { dependents } = await dailygit.database.readApp(
+							getAppName(args.oldPath)
+						)
+
+						await dependents.map(async dependent => {
+							try {
+								const file = await dailygit.database.fileExists(
+									{
+										path:
+											oldFiles[
+												newFiles.indexOf(filePath)
+											],
+									},
+									dependent.name
+								)
+								if (file) {
+									return await dailygit.database.updateFile(
+										{
+											commit: sha,
+											path:
+												oldFiles[
+													newFiles.indexOf(filePath)
+												],
+											newPath: filePath,
+										},
+										dependent.name
+									)
+								}
+								return
+							} catch (error) {
+								throw error
+							}
+						})
+					} catch (error) {
+						throw error
+					}
 				})
+
 				return {
 					success: true,
 					message: `Folder ${path.basename(
