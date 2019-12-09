@@ -288,7 +288,34 @@ const resolvers = {
 				await dailygit.git.removeAndCommit(args.path, author, committer)
 
 				// Database
-				await dailygit.database.deleteFile(args.path)
+				await dailygit.database.deleteFile(
+					args.path,
+					getAppName(args.path)
+				)
+
+				const { dependents } = await dailygit.database.readApp(
+					getAppName(args.path)
+				)
+
+				await dependents.map(async dependent => {
+					try {
+						const file = await dailygit.database.fileExists(
+							{
+								path: args.path,
+							},
+							dependent.name
+						)
+						if (file) {
+							return await dailygit.database.deleteFile(
+								args.path,
+								dependent.name
+							)
+						}
+						return
+					} catch (error) {
+						throw error
+					}
+				})
 
 				return {
 					success: true,

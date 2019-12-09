@@ -47,11 +47,10 @@ const createFile = (fields, db) => {
 	})
 }
 
-const deleteFile = filePath => {
+const deleteFile = (filePath, db) => {
 	return new Promise((resolve, reject) => {
 		// Connect to database
-		const dbName = getAppName(filePath)
-		return connectToDB(dbName)
+		return connectToDB(db)
 			.then(() => {
 				const repoName = getRepoName(filePath)
 
