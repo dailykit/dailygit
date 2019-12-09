@@ -156,7 +156,36 @@ const resolvers = {
 					)
 
 					// Database
-					await dailygit.database.deleteFile(filePath)
+					await dailygit.database.deleteFile(
+						filePath,
+						getAppName(filePath)
+					)
+				})
+
+				await files.map(async filePath => {
+					const { dependents } = await dailygit.database.readApp(
+						getAppName(filePath)
+					)
+
+					await dependents.map(async dependent => {
+						try {
+							const exists = await dailygit.database.fileExists(
+								{
+									path: filePath,
+								},
+								dependent.name
+							)
+							if (exists) {
+								return await dailygit.database.deleteFile(
+									filePath,
+									dependent.name
+								)
+							}
+							return
+						} catch (error) {
+							throw error
+						}
+					})
 				})
 
 				return {
