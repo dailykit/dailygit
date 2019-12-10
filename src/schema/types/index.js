@@ -4,8 +4,8 @@ const subscriptionTypes = require('./subscriptions/index')
 const scalarTypes = require('./scalars/index')
 
 module.exports = {
-	queryTypes,
-	mutationTypes,
-	subscriptionTypes,
-	scalarTypes,
+    queryTypes,
+    mutationTypes,
+    subscriptionTypes,
+    scalarTypes,
 }
