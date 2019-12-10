@@ -18,6 +18,7 @@ const appSchema = new Schema(
 			},
 		],
 		entities: [String],
+		staging: Boolean,
 	},
 	{ timestamps: true }
 )

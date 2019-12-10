@@ -5,7 +5,7 @@ const fileSchema = require('../models/File')
 
 const App = require('../models/App')
 
-const { getAppName, getRepoName } = require('../utils/parsePath')
+const { getRepoName } = require('../utils/parsePath')
 
 const connectToDB = dbName => {
 	return new Promise((resolve, reject) => {
@@ -102,6 +102,9 @@ const updateFile = (fields, db) => {
 						...(fields.lastSaved && {
 							lastSaved: fields.lastSaved,
 						}),
+						...(fields.content && {
+							content: fields.content,
+						}),
 						updatedAt: Date.now(),
 					}
 					return Model.findByIdAndUpdate(
@@ -171,7 +174,7 @@ const fileExists = ({ path: filePath }, db) => {
 	})
 }
 
-const createApp = ({ name, entities }) => {
+const createApp = ({ name, entities, staging }) => {
 	return new Promise((resolve, reject) => {
 		return connectToDB('apps').then(() => {
 			const app = new App({
@@ -179,6 +182,7 @@ const createApp = ({ name, entities }) => {
 				dependents: [],
 				status: 'active',
 				...(entities && { entities: entities }),
+				...(staging && { staging }),
 			})
 
 			// Save file as document

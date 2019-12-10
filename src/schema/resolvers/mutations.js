@@ -27,6 +27,7 @@ const resolvers = {
 						schema => schema.path
 					),
 				}),
+				...(args.staging && { staging: true }),
 			}
 
 			const docId = await dailygit.database
@@ -452,6 +453,9 @@ const resolvers = {
 								{
 									commit: sha,
 									path: args.path,
+									...(dependent.staging && {
+										content: args.content,
+									}),
 								},
 								dependent.name
 							)
@@ -467,6 +471,9 @@ const resolvers = {
 									name: mainFile.name,
 									path: mainFile.path,
 									commits: mainFile.commits,
+									...(dependent.staging && {
+										content: args.content,
+									}),
 								},
 								dependent.name
 							)
