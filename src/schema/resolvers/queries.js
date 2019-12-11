@@ -7,7 +7,7 @@ git.plugins.set('fs', fs)
 const dailygit = require('../../functions')
 
 const getFolderSize = require('../../utils/getFolderSize')
-const { getRelFilePath, repoDir } = require('../../utils/parsePath')
+const { getRelFilePath, repoDir, getAppName } = require('../../utils/parsePath')
 
 const getFilePaths = require('../../utils/getFilePaths')
 
@@ -77,7 +77,10 @@ const resolvers = {
             const stats = await fs.statSync(args.path)
             try {
                 const fs = await dailygit.files.getFile(args.path)
-                const db = await dailygit.database.readFile(args.path)
+                const db = await dailygit.database.readFile(
+                    { path: args.path },
+                    getAppName(args.path)
+                )
 
                 const file = {
                     name: path.basename(args.path),
