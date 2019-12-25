@@ -502,10 +502,13 @@ const resolvers = {
                 await dailygit.files.updateFile(args.path, args.content)
 
                 // Database
-                await dailygit.database.updateFile({
-                    path: args.path,
-                    lastSaved: Date.now(),
-                })
+                await dailygit.database.updateFile(
+                    {
+                        path: args.path,
+                        lastSaved: Date.now(),
+                    },
+                    getAppName(args.path)
+                )
                 return {
                     success: true,
                     message: `File: ${path.basename(
