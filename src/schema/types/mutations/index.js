@@ -14,7 +14,6 @@ const mutations = gql`
             name: String!
             schemas: String
             apps: String
-            type: String!
             staging: Boolean
         ): Result
         imageUpload(files: [Upload!]!, path: String!): Result

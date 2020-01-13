@@ -37,10 +37,13 @@ const resolvers = {
             const appPath = `./../apps/${args.name}`
             const dataFolders = []
             const schemaFolders = []
-            const { schemas } = args.schemas ? JSON.parse(args.schemas) : {}
-            const { apps } = args.apps ? JSON.parse(args.apps) : {}
+            const { schemas } = args.schemas
+                ? JSON.parse(args.schemas)
+                : { schemas: [] }
+            const { apps } = args.apps ? JSON.parse(args.apps) : { apps: [] }
 
-            if (args.type === 'hybrid' || args.type === 'independent') {
+            // For both independent & hybrid
+            if (schemas.length > 0) {
                 // Add Schema, Data Folder Paths
                 await schemas.map(folder => {
                     schemaFolders.push(`${appPath}/schema/${folder.path}`)
@@ -49,7 +52,7 @@ const resolvers = {
             }
 
             // Hybrid App
-            if (args.type === 'hybrid') {
+            if (schemas.length > 0 && apps.length > 0) {
                 try {
                     // Update the deps of extended app.
                     await dailygit.database.updateApp(apps, docId)
@@ -75,7 +78,7 @@ const resolvers = {
                 }
             }
             // Independent App
-            if (args.type === 'independent') {
+            if (schemas.length > 0 && apps.length === 0) {
                 try {
                     // Create data folders and initialize git
                     await addDataFolders(dataFolders)
@@ -95,7 +98,7 @@ const resolvers = {
                 }
             }
             // Dependent App
-            if (args.type === 'dependent') {
+            if (schemas.length === 0 && apps.length > 0) {
                 try {
                     // Update the deps of extended app.
                     await dailygit.database.updateApp(apps, docId)
