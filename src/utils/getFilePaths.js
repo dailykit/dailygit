@@ -13,9 +13,11 @@ const getFilePaths = async givenPath => {
                 [ignoreFunc],
                 (err, files) => {
                     if (err) return reject(new Error(err))
-                    const result = files.map(
-                        file => `./${file.split('\\').join('/')}`
-                    )
+                    const result = files
+                        .map(file => `./${file.split('\\').join('/')}`)
+                        .sort((a, b) =>
+                            path.basename(a) < path.basename(b) ? -1 : 1
+                        )
                     return resolve(result)
                 }
             )
