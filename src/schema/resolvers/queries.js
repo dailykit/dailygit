@@ -63,18 +63,17 @@ const resolvers = {
         getFiles: async (_, args) => {
             try {
                 const files = await getFilePaths(args.path)
-                const result = await files.map(
+                const page = await files.slice(
+                    args.offset,
+                    args.limit + args.offset
+                )
+                const result = await page.map(
                     async file =>
                         await resolvers.Query.getFile('', {
                             path: file,
                         })
                 )
-
-                const page = await result.slice(
-                    args.offset,
-                    args.limit + args.offset
-                )
-                return page
+                return result
             } catch (error) {
                 return error
             }
