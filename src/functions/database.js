@@ -199,13 +199,13 @@ const updateApp = (apps, appID) => {
         return connectToDB('apps').then(() => {
             apps.map(app => {
                 App.findOne({ name: app.name }, (error, doc) => {
-                    if (error) return reject(new Error(error))
+                    if (error || doc === null) return reject()
                     App.findByIdAndUpdate(
                         { _id: doc.id },
                         { $push: { dependents: appID } },
                         { new: true },
                         (error, doc) => {
-                            if (error) return reject(new Error(error))
+                            if (error) return reject()
                             return resolve(doc)
                         }
                     )
