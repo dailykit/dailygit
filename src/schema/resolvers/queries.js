@@ -83,6 +83,7 @@ const resolvers = {
                 )
 
                 const file = {
+                    id: db._id,
                     name: path.basename(args.path),
                     path: args.path,
                     size: stats.size,
