@@ -11,7 +11,7 @@ const { getRelFilePath, repoDir, getAppName } = require('../../utils/parsePath')
 
 const getFilePaths = require('../../utils/getFilePaths')
 
-const { PubSub } = require('apollo-server')
+const { PubSub } = require('graphql-subscriptions')
 const pubsub = new PubSub()
 
 const FILE_OPENED = 'FILE_OPENED'
