@@ -9,25 +9,25 @@ const http = require('http')
 // Import Schema
 const schema = require('./schema/schema')
 
-const PORT = 4000
-const production = process.env.NODE_ENV === 'production' ? true : false
+const PORT = process.env.PORT || 4000
+const isProd = process.env.NODE_ENV === 'production' ? true : false
+
 const apolloserver = new ApolloServer({
     schema,
     playground: {
-        endpoint: `${
-            production ? process.env.INST_URI : 'http://localhost:'
-        }${PORT}/graphql`,
+        endpoint: `http://localhost:${PORT}/graphql`,
     },
-    introspection: production ? false : true,
+    introspection: isProd ? false : true,
     validationRules: [depthLimit(11)],
     formatError: err => {
         if (err.message.includes('ENOENT'))
-            return production
-                ? new Error('No such folder or file exists!')
-                : err
-        return production ? new Error(err) : err
+            return isProd ? new Error('No such folder or file exists!') : err
+        return isProd ? new Error(err) : err
     },
-    debug: production ? false : true,
+    debug: isProd ? false : true,
+    context: {
+        root: process.env.FS_PATH,
+    },
 })
 
 const app = express()
