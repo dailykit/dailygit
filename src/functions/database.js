@@ -5,8 +5,6 @@ const fileSchema = require('../models/File')
 
 const App = require('../models/App')
 
-const { getRepoName } = require('../utils/parsePath')
-
 const connectToDB = dbName => {
    return new Promise((resolve, reject) => {
       return mongoose

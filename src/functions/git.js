@@ -4,8 +4,6 @@ const path = require('path')
 
 git.plugins.set('fs', fs)
 
-const { repoDir, getRelFilePath } = require('../utils/parsePath')
-
 const addAndCommit = ({ repoPath, filePath }, author, committer, message) => {
    return new Promise((resolve, reject) => {
       if (fs.existsSync(`${repoPath}/${filePath}`)) {
