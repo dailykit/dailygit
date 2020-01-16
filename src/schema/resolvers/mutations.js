@@ -155,7 +155,7 @@ const resolvers = {
                // Git
                await dailygit.git.removeAndCommit(
                   {
-                     repoPath: getRepoPath(`${root}${filepath}`),
+                     repoPath: `${root}${getRepoPath(filepath)}`,
                      filePath: filePath(filepath),
                   },
                   author,
@@ -233,7 +233,7 @@ const resolvers = {
 
             await oldFiles.map(filepath => {
                return git.remove({
-                  dir: getRepoPath(`${root}${filepath}`),
+                  dir: `${root}${getRepoPath(filepath)}`,
                   filepath: getFilePath(filepath),
                })
             })
@@ -242,7 +242,7 @@ const resolvers = {
                try {
                   const sha = await dailygit.git.addAndCommit(
                      {
-                        repoPath: getRepoPath(`${root}${filepath}`),
+                        repoPath: `${root}${getRepoPath(filepath)}`,
                         filePath: getFilePath(filepath),
                      },
                      author,
@@ -315,9 +315,10 @@ const resolvers = {
                name: 'placeholder',
                email: 'placeholder@example.com',
             }
+
             const sha = await dailygit.git.addAndCommit(
                {
-                  repoPath: getRepoPath(`${root}${args.path}`),
+                  repoPath: `${root}${getRepoPath(args.path)}`,
                   filePath: getFilePath(args.path),
                },
                author,
@@ -359,7 +360,7 @@ const resolvers = {
             }
             await dailygit.git.removeAndCommit(
                {
-                  repoPath: getRepoPath(`${root}${args.path}`),
+                  repoPath: `${root}${getRepoPath(args.path)}`,
                   filePath: getFilePath(args.path),
                },
                author,
@@ -411,7 +412,7 @@ const resolvers = {
             }
             const sha = await dailygit.git.addAndCommit(
                {
-                  repoPath: getRepoPath(`${root}${args.path}`),
+                  repoPath: `${root}${getRepoPath(args.path)}`,
                   filePath: getFilePath(args.path),
                },
                author,
@@ -520,13 +521,13 @@ const resolvers = {
                   .join('/')}`
 
             await git.remove({
-               dir: getRepoPath(`${root}${args.oldPath}`),
+               dir: `${root}${getRepoPath(args.oldPath)}`,
                filepath: getFilePath(args.oldPath),
             })
 
             const sha = await dailygit.git.addAndCommit(
                {
-                  repoPath: getRepoPath(`${root}${args.newPath}`),
+                  repoPath: `${root}${getRepoPath(args.newPath)}`,
                   filePath: getFilePath(args.newPath),
                },
                author,

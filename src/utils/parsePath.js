@@ -1,13 +1,13 @@
 const getRepoPath = path =>
-   `${path
+   path
       .split('/')
       .slice(0, 3)
-      .join('/')}`
+      .join('/')
 const getFilePath = path =>
-   `${path
+   path
       .split('/')
       .slice(3)
-      .join('/')}`
+      .join('/')
 
 module.exports = {
    getRepoPath,
