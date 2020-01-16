@@ -1,10 +1,7 @@
 const fs = require('fs')
 const path = require('path')
-const getFilesRecursively = require('recursive-readdir')
 const git = require('isomorphic-git')
 git.plugins.set('fs', fs)
-
-const { getAppName, baseFolder } = require('../utils/parsePath')
 
 const createFile = (filePath, content) => {
    return new Promise((resolve, reject) => {
@@ -39,35 +36,6 @@ const getFile = filePath => {
          })
       }
       return reject(`File: ${path.basename(filePath)} doesn't exists!`)
-   })
-}
-
-const searchFiles = async fileName => {
-   function ignoreFunc(file) {
-      return path.basename(file) === '.git' || path.basename(file) === 'schema'
-   }
-   return new Promise((resolve, reject) => {
-      getFilesRecursively(baseFolder, [ignoreFunc], (err, files) => {
-         if (err) return reject(new Error(err))
-         const paths = files
-            .map(file => `./${file.replace(/\\/g, '/')}`)
-            .filter(file =>
-               path
-                  .basename(file)
-                  .toLowerCase()
-                  .includes(fileName.toLowerCase())
-            )
-         const apps = {}
-         paths.forEach(path => {
-            let key = getAppName(path)
-            apps[key] = []
-         })
-         paths.forEach(path => {
-            let key = getAppName(path)
-            apps[key] = [...apps[key], path]
-         })
-         return resolve(JSON.stringify(apps))
-      })
    })
 }
 
@@ -124,6 +92,5 @@ module.exports = {
    getFile,
    updateFile,
    renameFile,
-   searchFiles,
    upload,
 }
