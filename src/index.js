@@ -13,21 +13,22 @@ const PORT = process.env.PORT || 4000
 const isProd = process.env.NODE_ENV === 'production' ? true : false
 
 const apolloserver = new ApolloServer({
-    schema,
-    playground: {
-        endpoint: `http://localhost:${PORT}/graphql`,
-    },
-    introspection: isProd ? false : true,
-    validationRules: [depthLimit(11)],
-    formatError: err => {
-        if (err.message.includes('ENOENT'))
-            return isProd ? new Error('No such folder or file exists!') : err
-        return isProd ? new Error(err) : err
-    },
-    debug: isProd ? false : true,
-    context: {
-        root: process.env.FS_PATH,
-    },
+   schema,
+   playground: {
+      endpoint: `http://localhost:${PORT}/graphql`,
+   },
+   introspection: isProd ? false : true,
+   validationRules: [depthLimit(11)],
+   formatError: err => {
+      if (err.message.includes('ENOENT'))
+         return isProd ? new Error('No such folder or file exists!') : err
+      return isProd ? new Error(err) : err
+   },
+   debug: isProd ? false : true,
+   context: {
+      root: process.env.FS_PATH,
+      media: process.env.MEDIA_PATH,
+   },
 })
 
 const app = express()
@@ -40,12 +41,12 @@ apolloserver.installSubscriptionHandlers(httpServer)
 app.use(cors({ origin: '*' }))
 
 httpServer.listen(PORT, () => {
-    console.log(
-        '🚀 Server ready at',
-        `http://localhost:${PORT}${apolloserver.graphqlPath}`
-    )
-    console.log(
-        '🚀 Subscriptions ready at',
-        `ws://localhost:${PORT}${apolloserver.subscriptionsPath}`
-    )
+   console.log(
+      '🚀 Server ready at',
+      `http://localhost:${PORT}${apolloserver.graphqlPath}`
+   )
+   console.log(
+      '🚀 Subscriptions ready at',
+      `ws://localhost:${PORT}${apolloserver.subscriptionsPath}`
+   )
 })
