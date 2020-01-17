@@ -49,7 +49,7 @@ const deleteFile = (filePath, dbName) => {
       // Connect to database
       return connectToDB(dbName || filePath.split('/')[0])
          .then(() => {
-            const repoName = dbName || filePath.split('/')[2]
+            const repoName = filePath.split('/')[2]
 
             // Create Model
             const Model = mongoose.model(repoName, fileSchema)
@@ -76,7 +76,7 @@ const updateFile = (fields, dbName) => {
       // Connect to database
       return connectToDB(dbName || fields.path.split('/')[0])
          .then(() => {
-            const repoName = dbName || fields.path.split('/')[2]
+            const repoName = fields.path.split('/')[2]
 
             // Create Model
             const Model = mongoose.model(repoName, fileSchema)
@@ -117,10 +117,10 @@ const updateFile = (fields, dbName) => {
    })
 }
 
-const readFile = filePath => {
+const readFile = (filePath, dbName) => {
    return new Promise((resolve, reject) => {
       // Connect to database
-      return connectToDB(filePath.split('/')[0])
+      return connectToDB(dbName || filePath.split('/')[0])
          .then(() => {
             const repoName = filePath.split('/')[2]
 
@@ -129,7 +129,7 @@ const readFile = filePath => {
 
             // Find file doc by path
             const query = {
-               path,
+               path: filePath,
             }
             Model.findOne(query, (error, file) => {
                if (error) return reject(new Error(error))
@@ -145,7 +145,7 @@ const fileExists = (filePath, dbName) => {
       // Connect to database
       return connectToDB(dbName || filePath.split('/')[0])
          .then(() => {
-            const repoName = dbName || filePath.split('/')[2]
+            const repoName = filePath.split('/')[2]
 
             // Create Model
             const Model = mongoose.model(repoName, fileSchema)
