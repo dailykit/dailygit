@@ -9,6 +9,7 @@ const dailygit = require('../../functions')
 const getFolderSize = require('../../utils/getFolderSize')
 
 const { getFilePaths } = require('../../utils/getFilePaths')
+const { getRepoPath, getFilePath } = require('../../utils/parsePath')
 
 const { PubSub } = require('graphql-subscriptions')
 const pubsub = new PubSub()
@@ -79,12 +80,12 @@ const resolvers = {
          const stats = await fs.statSync(`${root}${args.path}`)
          try {
             const fs = await dailygit.files.getFile(`${root}${args.path}`)
-            const db = await dailygit.database.readFile(`${root}${args.path}`)
+            const db = await dailygit.database.readFile(args.path)
 
             const file = {
                id: db._id,
                name: path.basename(args.path),
-               path: `${root}${args.path}`,
+               path: args.path,
                size: stats.size,
                createdAt: stats.birthtime,
                type: 'file',
@@ -150,18 +151,10 @@ const resolvers = {
       },
       getCommitContent: async (_, args, { root }) => {
          try {
-            const repoPath = `${root}${args.path
-               .split('/')
-               .slice(0, 3)
-               .join('/')}`
-            const filePath = args.path
-               .split('/')
-               .slice(3)
-               .join('/')
             const { blob } = await git.readBlob({
-               dir: repoPath,
+               dir: `${root}${getRepoPath(args.path)}`,
                oid: args.id,
-               filepath: filePath,
+               filepath: getFilePath(args.path),
             })
             return blob.toString()
          } catch (error) {
