@@ -15,7 +15,7 @@ const isProd = process.env.NODE_ENV === 'production' ? true : false
 const apolloserver = new ApolloServer({
    schema,
    playground: {
-      endpoint: `http://localhost:${PORT}/graphql`,
+      endpoint: `${process.env.ENDPOINT}:${PORT}/graphql`,
    },
    introspection: isProd ? false : true,
    validationRules: [depthLimit(11)],
