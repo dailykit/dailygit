@@ -154,7 +154,7 @@ const resolvers = {
                await dailygit.git.removeAndCommit(
                   {
                      repoPath: `${root}${getRepoPath(filepath)}`,
-                     filePath: filePath(filepath),
+                     filePath: getFilePath(filepath),
                   },
                   author,
                   committer,
