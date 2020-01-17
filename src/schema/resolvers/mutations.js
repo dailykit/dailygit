@@ -133,10 +133,8 @@ const resolvers = {
          }
       },
       deleteFolder: async (_, args, { root }) => {
-         const filepaths = await getFilePaths(`${root}${args.path}`).then(
-            paths => {
-               return paths.map(path => path.replace(new RegExp(root), ''))
-            }
+         const filepaths = await getFilePaths(`${root}${args.path}`).map(path =>
+            path.replace(new RegExp(root), '')
          )
          try {
             // File System
@@ -204,11 +202,9 @@ const resolvers = {
       },
       renameFolder: async (_, args, { root }) => {
          try {
-            const oldFiles = await getFilePaths(`${root}${args.oldPath}`).then(
-               paths => {
-                  return paths.map(path => path.replace(new RegExp(root), ''))
-               }
-            )
+            const oldFiles = await getFilePaths(
+               `${root}${args.oldPath}`
+            ).map(path => path.replace(new RegExp(root), ''))
 
             // File System
             await dailygit.folders.renameFolder(
@@ -217,11 +213,9 @@ const resolvers = {
             )
 
             // Git
-            const newFiles = await getFilePaths(`${root}${args.newPath}`).then(
-               paths => {
-                  return paths.map(path => path.replace(new RegExp(root), ''))
-               }
-            )
+            const newFiles = await getFilePaths(
+               `${root}${args.newPath}`
+            ).map(path => path.replace(new RegExp(root), ''))
             const author = {
                name: 'placeholder',
                email: 'placeholder@example.com',
@@ -375,9 +369,15 @@ const resolvers = {
 
             await dependents.map(async dependent => {
                try {
-                  const file = await dailygit.database.fileExists(args.path)
+                  const file = await dailygit.database.fileExists(
+                     args.path,
+                     dependent.name
+                  )
                   if (file) {
-                     return await dailygit.database.deleteFile(args.path)
+                     return await dailygit.database.deleteFile(
+                        args.path,
+                        dependent.name
+                     )
                   }
                   return
                } catch (error) {
@@ -427,21 +427,28 @@ const resolvers = {
             })
 
             // Update dependents if any
+
             const { dependents } = await dailygit.database.readApp(
                args.path.split('/')[0]
             )
             await dependents.map(async dependent => {
                try {
-                  const exists = await dailygit.database.fileExists(args.path)
+                  const exists = await dailygit.database.fileExists(
+                     args.path,
+                     dependent.name
+                  )
 
                   if (exists) {
-                     return await dailygit.database.updateFile({
-                        commit: sha,
-                        path: args.path,
-                        ...(dependent.staging && {
-                           content: args.content,
-                        }),
-                     })
+                     return await dailygit.database.updateFile(
+                        {
+                           commit: sha,
+                           path: args.path,
+                           ...(dependent.staging && {
+                              content: args.content,
+                           }),
+                        },
+                        dependent.name
+                     )
                   } else {
                      const mainFile = await dailygit.database.readFile(
                         args.path
@@ -509,16 +516,6 @@ const resolvers = {
                name: 'placeholder',
                email: 'placeholder@example.com',
             }
-            const repoPath = path =>
-               `${root}${path
-                  .split('/')
-                  .slice(0, 3)
-                  .join('/')}`
-            const filePath = path =>
-               `${path
-                  .split('/')
-                  .slice(3)
-                  .join('/')}`
 
             await git.remove({
                dir: `${root}${getRepoPath(args.oldPath)}`,
@@ -550,13 +547,19 @@ const resolvers = {
 
             await dependents.map(async dependent => {
                try {
-                  const file = await dailygit.database.fileExists(args.oldPath)
+                  const file = await dailygit.database.fileExists(
+                     args.oldPath,
+                     dependent.name
+                  )
                   if (file) {
-                     return await dailygit.database.updateFile({
-                        commit: sha,
-                        path: args.oldPath,
-                        newPath: args.newPath,
-                     })
+                     return await dailygit.database.updateFile(
+                        {
+                           commit: sha,
+                           path: args.oldPath,
+                           newPath: args.newPath,
+                        },
+                        dependent.name
+                     )
                   }
                   return
                } catch (error) {
