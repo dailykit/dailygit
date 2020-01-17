@@ -64,7 +64,7 @@ const resolvers = {
                await addSchemaFolders(schemaFolders, schemas, appPath)
 
                // Create Extendend Schema File
-               await addExtendedSchemaFiles(apps, args.name)
+               await addExtendedSchemaFiles(apps, args.name, root)
 
                return {
                   success: true,
@@ -104,7 +104,7 @@ const resolvers = {
                await dailygit.database.updateApp(apps, docId)
 
                // Create Extendend Schema File
-               await addExtendedSchemaFiles(apps, args.name)
+               await addExtendedSchemaFiles(apps, args.name, root)
 
                return {
                   success: true,
