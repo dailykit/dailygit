@@ -17,33 +17,21 @@ const addDataFolders = folders => {
 }
 
 const addSchemaFolders = async (folders, schema, appPath) => {
-   const folderPath = (folderName, folderPath) =>
-      `${appPath}/${folderName}/${folderPath}`
-
-   await folders.map(async path => {
-      try {
-         await dailygit.folders.createFolder(path)
-         await schema.map(folder => {
-            return folder.entities.map(file => {
-               const filepath = `${folderPath('schema', folder.path)}/${
-                  file.name
-               }.json`
-               return fs.writeFile(
-                  filepath,
-                  JSON.stringify(file.content, null, 2),
-                  error => {
-                     if (error) throw error
-                  }
-               )
-            })
-         })
-      } catch (error) {
-         return {
-            success: false,
-            error: new Error(error),
-         }
-      }
-   })
+   try {
+      // Create schema folders
+      await folders.map(path => fs.mkdirSync(path, { recursive: true }))
+      // Create entity files
+      await schema.map(({ path, entities }) => {
+         return entities.map(entity =>
+            fs.writeFileSync(
+               `${appPath}/schema/${path}/${entity.name}.json`,
+               JSON.stringify(entity.content, null, 3)
+            )
+         )
+      })
+   } catch (error) {
+      throw error
+   }
 }
 
 const addExtendedSchemaFiles = (apps, name, root) => {
