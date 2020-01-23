@@ -334,7 +334,7 @@ const resolvers = {
          } catch (error) {
             return {
                success: false,
-               error,
+               error: error.code === 'ResolveRefError' ? error.message : error,
             }
          }
       },
