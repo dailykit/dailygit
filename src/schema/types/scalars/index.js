@@ -19,6 +19,7 @@ const typeDefs = gql`
         children: [FolderWithFiles]
     }
     type File {
+        id: ID
         name: String
         path: String
         type: String
