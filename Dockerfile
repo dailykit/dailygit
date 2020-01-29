@@ -1,6 +1,6 @@
 FROM node:12.2.0-alpine
-WORKDIR /usr/src/app/dailygit
+WORKDIR /usr/src/app/
 COPY package.json ./
-RUN npm install
+RUN yarn
 COPY . .
-CMD ["npm", "run", "dev"]
+CMD ["yarn", "run", "dev"]
