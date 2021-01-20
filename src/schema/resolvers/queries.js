@@ -11,11 +11,6 @@ const getFolderSize = require('../../utils/getFolderSize')
 const { getFilePaths } = require('../../utils/getFilePaths')
 const { getRepoPath, getFilePath } = require('../../utils/parsePath')
 
-const { PubSub } = require('graphql-subscriptions')
-const pubsub = new PubSub()
-
-const FILE_OPENED = 'FILE_OPENED'
-
 const resolvers = {
    Subscription: {
       openFileSub: {
@@ -80,18 +75,15 @@ const resolvers = {
          const stats = await fs.statSync(`${root}${args.path}`)
          try {
             const fs = await dailygit.files.getFile(`${root}${args.path}`)
-            const db = await dailygit.database.readFile(args.path)
 
             const file = {
-               id: db._id,
                name: path.basename(args.path),
                path: args.path,
                size: stats.size,
                createdAt: stats.birthtime,
                type: 'file',
                content: fs.toString(),
-               commits: db.commits,
-               lastSaved: db.lastSaved || '',
+               lastSaved: "",
             }
 
             return file
@@ -106,7 +98,6 @@ const resolvers = {
                { path: args.path },
                { root }
             )
-            await pubsub.publish(FILE_OPENED, { openFileSub: file })
             return file
          } catch (error) {
             return error

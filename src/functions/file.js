@@ -8,7 +8,7 @@ const createFile = (filePath, content) => {
       if (fs.existsSync(filePath)) {
          return reject(`File: ${path.basename(filePath)} already exists!`)
       }
-      return fs.writeFile(filePath, JSON.stringify(content, null, 2), error => {
+      return fs.writeFile(filePath, content, error => {
          if (error) return reject(new Error(error))
          return resolve()
       })

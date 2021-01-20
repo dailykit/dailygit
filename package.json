@@ -3,31 +3,25 @@
   "version": "0.4.1",
   "main": "./src/index.js",
   "dependencies": {
-    "apollo-server-express": "^2.9.12",
+    "apollo-server-express": "^2.19.2",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
-    "graphql": "^14.5.8",
+    "graphql": "^15.4.0",
     "graphql-depth-limit": "^1.1.0",
-    "graphql-subscriptions": "^1.1.0",
-    "graphql-tools": "^4.0.6",
+    "graphql-tools": "^7.0.2",
     "isomorphic-git": "0.75.0",
-    "lodash": "^4.17.15",
-    "mongoose": "^5.7.12",
-    "rimraf": "^3.0.0"
+    "lodash": "^4.17.20",
+    "mongoose": "^5.11.12",
+    "rimraf": "^3.0.2"
   },
   "devDependencies": {
-    "@babel/cli": "^7.7.4",
-    "@babel/core": "^7.7.4",
-    "@babel/node": "^7.7.4",
-    "@babel/preset-env": "^7.7.4",
-    "nodemon": "^2.0.1"
+    "esm": "^3.2.25",
+    "nodemon": "^2.0.7"
   },
   "scripts": {
-    "dev": "nodemon --exec babel-node src/index.js",
+    "dev": "nodemon -r esm index.js",
     "clean": "rm -rf build && mkdir build",
-    "build-server": "babel --ignore node_modules -d ./build ./src -s",
-    "build": "babel src/index.js -d dist",
     "start": "node src/index.js"
   },
   "author": "",

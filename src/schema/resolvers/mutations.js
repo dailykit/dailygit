@@ -6,118 +6,12 @@ git.plugins.set('fs', fs)
 
 const dailygit = require('../../functions')
 
-const {
-   addDataFolders,
-   addExtendedSchemaFiles,
-   addSchemaFolders,
-} = require('../../utils/installApp')
-
 const { getFilePaths } = require('../../utils/getFilePaths')
 
 const { getRepoPath, getFilePath } = require('../../utils/parsePath')
 
 const resolvers = {
    Mutation: {
-      installApp: async (_, args, { root }) => {
-         // Add the app to installed list in DB
-         const options = {
-            name: args.name,
-            ...(args.schemas && {
-               entities: JSON.parse(args.schemas).schemas.map(
-                  schema => schema.path
-               ),
-            }),
-            ...(args.staging && { staging: true }),
-         }
-
-         const docId = await dailygit.database
-            .createApp(options)
-            .then(result => result.id)
-
-         const appPath = `${root}${args.name}`
-         const dataFolders = []
-         const schemaFolders = []
-         const { schemas } = args.schemas
-            ? JSON.parse(args.schemas)
-            : { schemas: [] }
-         const { apps } = args.apps ? JSON.parse(args.apps) : { apps: [] }
-
-         // For both independent & hybrid
-         if (schemas.length > 0) {
-            // Add Schema, Data Folder Paths
-            await schemas.map(folder => {
-               schemaFolders.push(`${appPath}/schema/${folder.path}`)
-               dataFolders.push(`${appPath}/data/${folder.path}`)
-            })
-         }
-
-         // Hybrid App
-         if (schemas.length > 0 && apps.length > 0) {
-            try {
-               // Update the deps of extended app.
-               await dailygit.database.updateApp(apps, docId)
-
-               // Create data folders and initialize git
-               await addDataFolders(dataFolders)
-
-               // Create Folders with Schema Entity Files
-               await addSchemaFolders(schemaFolders, schemas, appPath)
-
-               // Create Extendend Schema File
-               await addExtendedSchemaFiles(apps, args.name, root)
-
-               return {
-                  success: true,
-                  message: `App ${args.name} is installed!`,
-               }
-            } catch (error) {
-               return {
-                  success: false,
-                  error: `App ${args.name} did not install correctly!`,
-               }
-            }
-         }
-         // Independent App
-         if (schemas.length > 0 && apps.length === 0) {
-            try {
-               // Create data folders and initialize git
-               await addDataFolders(dataFolders)
-
-               // Create Folders with Schema Entity Files
-               await addSchemaFolders(schemaFolders, schemas, appPath)
-
-               return {
-                  success: true,
-                  message: `App ${args.name} is installed!`,
-               }
-            } catch (error) {
-               return {
-                  success: false,
-                  error: `App ${args.name} did not install correctly!`,
-               }
-            }
-         }
-         // Dependent App
-         if (schemas.length === 0 && apps.length > 0) {
-            try {
-               // Update the deps of extended app.
-               await dailygit.database.updateApp(apps, docId)
-
-               // Create Extendend Schema File
-               await addExtendedSchemaFiles(apps, args.name, root)
-
-               return {
-                  success: true,
-                  message: `App ${args.name} is installed!`,
-               }
-            } catch (error) {
-               return {
-                  success: false,
-                  error: `App ${args.name} did not install correctly!`,
-               }
-            }
-         }
-      },
       createFolder: async (_, args, { root }) => {
          try {
             await dailygit.folders.createFolder(`${root}${args.path}`)
@@ -133,61 +27,36 @@ const resolvers = {
          }
       },
       deleteFolder: async (_, args, { root }) => {
-         const filepaths = await getFilePaths(`${root}${args.path}`).map(path =>
-            path.replace(new RegExp(root), '')
-         )
+         // const filepaths = await getFilePaths(`${root}${args.path}`).map(path =>
+         //    path.replace(new RegExp(root), '')
+         // )
          try {
             // File System
             await dailygit.folders.deleteFolder(`${root}${args.path}`)
 
-            const author = {
-               name: 'placeholder',
-               email: 'placeholder@example.com',
-            }
-            const committer = {
-               name: 'placeholder',
-               email: 'placeholder@example.com',
-            }
+            // const author = {
+            //    name: 'placeholder',
+            //    email: 'placeholder@example.com',
+            // }
+            // const committer = {
+            //    name: 'placeholder',
+            //    email: 'placeholder@example.com',
+            // }
 
-            await filepaths.map(async filepath => {
-               // Git
-               await dailygit.git.removeAndCommit(
-                  {
-                     repoPath: `${root}${getRepoPath(filepath)}`,
-                     filePath: getFilePath(filepath),
-                  },
-                  author,
-                  committer,
-                  `Deleted: File ${path.basename(filepath)}`
-               )
+            // await filepaths.map(async filepath => {
+            //    // Git
+            //    await dailygit.git.removeAndCommit(
+            //       {
+            //          repoPath: `${root}${getRepoPath(filepath)}`,
+            //          filePath: getFilePath(filepath),
+            //       },
+            //       author,
+            //       committer,
+            //       `Deleted: File ${path.basename(filepath)}`
+            //    )
 
-               // Database
-               await dailygit.database.deleteFile(filepath)
-            })
-
-            await filepaths.map(async filepath => {
-               const { dependents } = await dailygit.database.readApp(
-                  filepath.split('/')[0]
-               )
-
-               await dependents.map(async dependent => {
-                  try {
-                     const exists = await dailygit.database.fileExists(
-                        filepath,
-                        dependent.name
-                     )
-                     if (exists) {
-                        return await dailygit.database.deleteFile(
-                           filepath,
-                           dependent.name
-                        )
-                     }
-                     return
-                  } catch (error) {
-                     throw error
-                  }
-               })
-            })
+            //    // Database
+            // })
 
             return {
                success: true,
@@ -202,9 +71,9 @@ const resolvers = {
       },
       renameFolder: async (_, args, { root }) => {
          try {
-            const oldFiles = await getFilePaths(
-               `${root}${args.oldPath}`
-            ).map(path => path.replace(new RegExp(root), ''))
+            // const oldFiles = await getFilePaths(
+            //    `${root}${args.oldPath}`
+            // ).map(path => path.replace(new RegExp(root), ''))
 
             // File System
             await dailygit.folders.renameFolder(
@@ -213,74 +82,44 @@ const resolvers = {
             )
 
             // Git
-            const newFiles = await getFilePaths(
-               `${root}${args.newPath}`
-            ).map(path => path.replace(new RegExp(root), ''))
-            const author = {
-               name: 'placeholder',
-               email: 'placeholder@example.com',
-            }
-            const committer = {
-               name: 'placeholder',
-               email: 'placeholder@example.com',
-            }
+            // const newFiles = await getFilePaths(
+            //    `${root}${args.newPath}`
+            // ).map(path => path.replace(new RegExp(root), ''))
+            // const author = {
+            //    name: 'placeholder',
+            //    email: 'placeholder@example.com',
+            // }
+            // const committer = {
+            //    name: 'placeholder',
+            //    email: 'placeholder@example.com',
+            // }
 
-            await oldFiles.map(filepath => {
-               return git.remove({
-                  dir: `${root}${getRepoPath(filepath)}`,
-                  filepath: getFilePath(filepath),
-               })
-            })
+            // await oldFiles.map(filepath => {
+            //    return git.remove({
+            //       dir: `${root}${getRepoPath(filepath)}`,
+            //       filepath: getFilePath(filepath),
+            //    })
+            // })
 
-            await newFiles.map(async filepath => {
-               try {
-                  const sha = await dailygit.git.addAndCommit(
-                     {
-                        repoPath: `${root}${getRepoPath(filepath)}`,
-                        filePath: getFilePath(filepath),
-                     },
-                     author,
-                     committer,
-                     `Moved: ${path.basename(filepath)} from ${path.basename(
-                        args.oldPath
-                     )} to ${path.basename(args.newPath)}`
-                  )
+            // await newFiles.map(async filepath => {
+            //    try {
+            //       const sha = await dailygit.git.addAndCommit(
+            //          {
+            //             repoPath: `${root}${getRepoPath(filepath)}`,
+            //             filePath: getFilePath(filepath),
+            //          },
+            //          author,
+            //          committer,
+            //          `Moved: ${path.basename(filepath)} from ${path.basename(
+            //             args.oldPath
+            //          )} to ${path.basename(args.newPath)}`
+            //       )
 
-                  // Database
-                  await dailygit.database.updateFile({
-                     commit: sha,
-                     path: oldFiles[newFiles.indexOf(filepath)],
-                     newPath: filepath,
-                  })
-
-                  const { dependents } = await dailygit.database.readApp(
-                     args.oldPath.split('/')[0]
-                  )
-
-                  await dependents.map(async dependent => {
-                     try {
-                        const file = await dailygit.database.fileExists(
-                           oldFiles[newFiles.indexOf(filepath)]
-                        )
-                        if (file) {
-                           return await dailygit.database.updateFile(
-                              {
-                                 commit: sha,
-                                 path: oldFiles[newFiles.indexOf(filepath)],
-                                 newPath: filepath,
-                              },
-                              dependent.name
-                           )
-                        }
-                        return
-                     } catch (error) {
-                        throw error
-                     }
-                  })
-               } catch (error) {
-                  throw error
-               }
-            })
+            //       // Database
+            //    } catch (error) {
+            //       throw error
+            //    }
+            // })
 
             return {
                success: true,
@@ -301,31 +140,26 @@ const resolvers = {
             await dailygit.files.createFile(`${root}${args.path}`, args.content)
 
             // Git
-            const author = {
-               name: 'placeholder',
-               email: 'placeholder@example.com',
-            }
-            const committer = {
-               name: 'placeholder',
-               email: 'placeholder@example.com',
-            }
+            // const author = {
+            //    name: 'placeholder',
+            //    email: 'placeholder@example.com',
+            // }
+            // const committer = {
+            //    name: 'placeholder',
+            //    email: 'placeholder@example.com',
+            // }
 
-            const sha = await dailygit.git.addAndCommit(
-               {
-                  repoPath: `${root}${getRepoPath(args.path)}`,
-                  filePath: getFilePath(args.path),
-               },
-               author,
-               committer,
-               `Added: ${path.basename(args.path)}`
-            )
+            // const sha = await dailygit.git.addAndCommit(
+            //    {
+            //       repoPath: `${root}${getRepoPath(args.path)}`,
+            //       filePath: getFilePath(args.path),
+            //    },
+            //    author,
+            //    committer,
+            //    `Added: ${path.basename(args.path)}`
+            // )
 
             // Database
-            await dailygit.database.createFile({
-               name: path.basename(args.path),
-               path: args.path,
-               commits: [sha],
-            })
 
             return {
                success: true,
@@ -344,46 +178,23 @@ const resolvers = {
             await dailygit.files.deleteFile(`${root}${args.path}`)
 
             // Git
-            const author = {
-               name: 'placeholder',
-               email: 'placeholder@example.com',
-            }
-            const committer = {
-               name: 'placeholder',
-               email: 'placeholder@example.com',
-            }
-            await dailygit.git.removeAndCommit(
-               {
-                  repoPath: `${root}${getRepoPath(args.path)}`,
-                  filePath: getFilePath(args.path),
-               },
-               author,
-               committer
-            )
+            // const author = {
+            //    name: 'placeholder',
+            //    email: 'placeholder@example.com',
+            // }
+            // const committer = {
+            //    name: 'placeholder',
+            //    email: 'placeholder@example.com',
+            // }
+            // await dailygit.git.removeAndCommit(
+            //    {
+            //       repoPath: `${root}${getRepoPath(args.path)}`,
+            //       filePath: getFilePath(args.path),
+            //    },
+            //    author,
+            //    committer
+            // )
             // Database
-            await dailygit.database.deleteFile(args.path)
-
-            const { dependents } = await dailygit.database.readApp(
-               args.path.split('/')[0]
-            )
-
-            await dependents.map(async dependent => {
-               try {
-                  const file = await dailygit.database.fileExists(
-                     args.path,
-                     dependent.name
-                  )
-                  if (file) {
-                     return await dailygit.database.deleteFile(
-                        args.path,
-                        dependent.name
-                     )
-                  }
-                  return
-               } catch (error) {
-                  throw error
-               }
-            })
 
             return {
                success: true,
@@ -402,70 +213,25 @@ const resolvers = {
             await dailygit.files.updateFile(`${root}${args.path}`, args.content)
 
             // Git
-            const author = {
-               name: 'placeholder',
-               email: 'placeholder@example.com',
-            }
-            const committer = {
-               name: 'placeholder',
-               email: 'placeholder@example.com',
-            }
-            const sha = await dailygit.git.addAndCommit(
-               {
-                  repoPath: `${root}${getRepoPath(args.path)}`,
-                  filePath: getFilePath(args.path),
-               },
-               author,
-               committer,
-               args.message
-            )
+            // const author = {
+            //    name: 'placeholder',
+            //    email: 'placeholder@example.com',
+            // }
+            // const committer = {
+            //    name: 'placeholder',
+            //    email: 'placeholder@example.com',
+            // }
+            // const sha = await dailygit.git.addAndCommit(
+            //    {
+            //       repoPath: `${root}${getRepoPath(args.path)}`,
+            //       filePath: getFilePath(args.path),
+            //    },
+            //    author,
+            //    committer,
+            //    args.message
+            // )
 
             // Database
-            await dailygit.database.updateFile({
-               commit: sha,
-               path: args.path,
-            })
-
-            // Update dependents if any
-
-            const { dependents } = await dailygit.database.readApp(
-               args.path.split('/')[0]
-            )
-            await dependents.map(async dependent => {
-               try {
-                  const exists = await dailygit.database.fileExists(
-                     args.path,
-                     dependent.name
-                  )
-
-                  if (exists) {
-                     return await dailygit.database.updateFile(
-                        {
-                           commit: sha,
-                           path: args.path,
-                           ...(dependent.staging && {
-                              content: args.content,
-                           }),
-                        },
-                        dependent.name
-                     )
-                  } else {
-                     const mainFile = await dailygit.database.readFile(
-                        args.path
-                     )
-                     return await dailygit.database.createFile({
-                        name: mainFile.name,
-                        path: mainFile.path,
-                        commits: mainFile.commits,
-                        ...(dependent.staging && {
-                           content: args.content,
-                        }),
-                     })
-                  }
-               } catch (error) {
-                  throw error
-               }
-            })
 
             return {
                success: true,
@@ -484,10 +250,6 @@ const resolvers = {
             await dailygit.files.updateFile(`${root}${args.path}`, args.content)
 
             // Database
-            await dailygit.database.updateFile({
-               path: args.path,
-               lastSaved: Date.now(),
-            })
             return {
                success: true,
                message: `File: ${path.basename(args.path)} has been updated!`,
@@ -508,64 +270,33 @@ const resolvers = {
             )
 
             // Git
-            const author = {
-               name: 'placeholder',
-               email: 'placeholder@example.com',
-            }
-            const committer = {
-               name: 'placeholder',
-               email: 'placeholder@example.com',
-            }
+            // const author = {
+            //    name: 'placeholder',
+            //    email: 'placeholder@example.com',
+            // }
+            // const committer = {
+            //    name: 'placeholder',
+            //    email: 'placeholder@example.com',
+            // }
 
-            await git.remove({
-               dir: `${root}${getRepoPath(args.oldPath)}`,
-               filepath: getFilePath(args.oldPath),
-            })
+            // await git.remove({
+            //    dir: `${root}${getRepoPath(args.oldPath)}`,
+            //    filepath: getFilePath(args.oldPath),
+            // })
 
-            const sha = await dailygit.git.addAndCommit(
-               {
-                  repoPath: `${root}${getRepoPath(args.newPath)}`,
-                  filePath: getFilePath(args.newPath),
-               },
-               author,
-               committer,
-               `Renamed: ${path.basename(args.oldPath)} file to ${path.basename(
-                  args.newPath
-               )}`
-            )
+            // const sha = await dailygit.git.addAndCommit(
+            //    {
+            //       repoPath: `${root}${getRepoPath(args.newPath)}`,
+            //       filePath: getFilePath(args.newPath),
+            //    },
+            //    author,
+            //    committer,
+            //    `Renamed: ${path.basename(args.oldPath)} file to ${path.basename(
+            //       args.newPath
+            //    )}`
+            // )
 
             // Database
-            await dailygit.database.updateFile({
-               commit: sha,
-               path: args.oldPath,
-               newPath: args.newPath,
-            })
-
-            const { dependents } = await dailygit.database.readApp(
-               args.oldPath.split('/')[0]
-            )
-
-            await dependents.map(async dependent => {
-               try {
-                  const file = await dailygit.database.fileExists(
-                     args.oldPath,
-                     dependent.name
-                  )
-                  if (file) {
-                     return await dailygit.database.updateFile(
-                        {
-                           commit: sha,
-                           path: args.oldPath,
-                           newPath: args.newPath,
-                        },
-                        dependent.name
-                     )
-                  }
-                  return
-               } catch (error) {
-                  throw error
-               }
-            })
 
             return {
                success: true,

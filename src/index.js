@@ -12,10 +12,10 @@ const schema = require('./schema/schema')
 const PORT = process.env.PORT || 4000
 const isProd = process.env.NODE_ENV === 'production' ? true : false
 
-const apolloserver = new ApolloServer({
+const server = new ApolloServer({
    schema,
    playground: {
-      endpoint: `${process.env.ENDPOINT}:${PORT}/graphql`,
+      endpoint: `${process.env.ENDPOINT}/graphql`,
    },
    introspection: isProd ? false : true,
    validationRules: [depthLimit(11)],
@@ -33,20 +33,13 @@ const apolloserver = new ApolloServer({
 
 const app = express()
 
-apolloserver.applyMiddleware({ app })
-
-const httpServer = http.createServer(app)
-apolloserver.installSubscriptionHandlers(httpServer)
+server.applyMiddleware({ app })
 
 app.use(cors({ origin: '*' }))
 
-httpServer.listen(PORT, () => {
+app.listen({port: PORT}, () => {
    console.log(
       '🚀 Server ready at',
-      `http://localhost:${PORT}${apolloserver.graphqlPath}`
-   )
-   console.log(
-      '🚀 Subscriptions ready at',
-      `ws://localhost:${PORT}${apolloserver.subscriptionsPath}`
+      `http://localhost:${PORT}${server.graphqlPath}`
    )
 })
