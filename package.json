@@ -9,6 +9,7 @@
     "express": "^4.17.1",
     "graphql": "^15.4.0",
     "graphql-depth-limit": "^1.1.0",
+    "graphql-request": "^3.4.0",
     "graphql-tools": "^7.0.2",
     "isomorphic-git": "0.75.0",
     "lodash": "^4.17.20",
