@@ -1,4 +1,5 @@
 const fs = require('fs')
+const mv = require('mv')
 const path = require('path')
 const rimraf = require('rimraf')
 
@@ -22,10 +23,7 @@ const getNestedFolders = async url => {
          if (stats.isDirectory()) {
             let node = {}
             node.name = folder
-            node.path = `${url}/${folder}`
-               .split('/')
-               .filter(Boolean)
-               .join('/')
+            node.path = `${url}/${folder}`.split('/').filter(Boolean).join('/')
             let children = await getNestedFolders(`${url}/${folder}`)
             node.children = children
             return node
@@ -46,10 +44,7 @@ const getFolderWithFiles = async url => {
             const stats = fs.statSync(`${url}/${item}`)
             let node = {}
             node.name = item
-            node.path = `${url}/${item}`
-               .split('/')
-               .filter(Boolean)
-               .join('/')
+            node.path = `${url}/${item}`.split('/').filter(Boolean).join('/')
             node.createdAt = stats.birthtime
             if (stats.isFile()) {
                const fileData = await files.getFile(`${url}/${item}`)
@@ -109,9 +104,19 @@ const renameFolder = (oldPath, newPath) => {
          return reject('Folder already exists!')
       }
       if (fs.existsSync(oldPath)) {
-         return fs.rename(oldPath, newPath, async error => {
-            if (error) return reject(new Error(error))
-            return resolve()
+         // mv(oldPath, newPath, { mkdirp: true }, function (error) {
+         //    if (error) {
+         //       return reject(new Error(error))
+         //    } else {
+         //       return resolve()
+         //    }
+         // })
+         return fs.rename(oldPath, newPath, error => {
+            if (error) {
+               return reject(new Error(error))
+            } else {
+               return resolve()
+            }
          })
       }
       return reject(`Folder: ${path.basename(oldPath)} doesn't exists!`)

@@ -1,7 +1,8 @@
 const path = require('path')
 const fs = require('fs')
 
-export const getFilePaths = folder => {
+const getFilePaths = folder => {
+   console.log({ folder: folder })
    const filepaths = []
    const result = fs
       .readdirSync(folder)

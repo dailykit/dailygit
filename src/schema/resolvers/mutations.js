@@ -27,36 +27,39 @@ const resolvers = {
          }
       },
       deleteFolder: async (_, args, { root }) => {
-         // const filepaths = await getFilePaths(`${root}${args.path}`).map(path =>
-         //    path.replace(new RegExp(root), '')
-         // )
+         const filepaths = await getFilePaths(`${root}${args.path}`).map(path =>
+            path.replace(new RegExp(root), '')
+         )
          try {
             // File System
             await dailygit.folders.deleteFolder(`${root}${args.path}`)
 
-            // const author = {
-            //    name: 'placeholder',
-            //    email: 'placeholder@example.com',
-            // }
-            // const committer = {
-            //    name: 'placeholder',
-            //    email: 'placeholder@example.com',
-            // }
+            const author = {
+               name: 'placeholder',
+               email: 'placeholder@example.com',
+            }
+            const committer = {
+               name: 'placeholder',
+               email: 'placeholder@example.com',
+            }
 
-            // await filepaths.map(async filepath => {
-            //    // Git
-            //    await dailygit.git.removeAndCommit(
-            //       {
-            //          repoPath: `${root}${getRepoPath(filepath)}`,
-            //          filePath: getFilePath(filepath),
-            //       },
-            //       author,
-            //       committer,
-            //       `Deleted: File ${path.basename(filepath)}`
-            //    )
+            await filepaths.map(async filepath => {
+               //    // Git
+               await dailygit.git.removeAndCommit(
+                  {
+                     repoPath: `${root}${getRepoPath(filepath)}`,
+                     filePath: getFilePath(filepath),
+                  },
+                  author,
+                  committer,
+                  `Deleted: File ${path.basename(filepath)}`
+               )
 
-            //    // Database
-            // })
+               // Database
+               await dailygit.database
+                  .deleteRecordedFile({ path: filepath })
+                  .catch(error => console.error(error))
+            })
 
             return {
                success: true,
@@ -71,10 +74,11 @@ const resolvers = {
       },
       renameFolder: async (_, args, { root }) => {
          try {
-            // const oldFiles = await getFilePaths(
-            //    `${root}${args.oldPath}`
-            // ).map(path => path.replace(new RegExp(root), ''))
+            const oldFiles = await getFilePaths(
+               `${root}${args.oldPath}`
+            ).map(path => path.replace(new RegExp(root), ''))
 
+            console.log(oldFiles)
             // File System
             await dailygit.folders.renameFolder(
                `${root}${args.oldPath}`,
@@ -82,44 +86,52 @@ const resolvers = {
             )
 
             // Git
-            // const newFiles = await getFilePaths(
-            //    `${root}${args.newPath}`
-            // ).map(path => path.replace(new RegExp(root), ''))
-            // const author = {
-            //    name: 'placeholder',
-            //    email: 'placeholder@example.com',
-            // }
-            // const committer = {
-            //    name: 'placeholder',
-            //    email: 'placeholder@example.com',
-            // }
+            const newFiles = await getFilePaths(
+               `${root}${args.newPath}`
+            ).map(path => path.replace(new RegExp(root), ''))
+            const author = {
+               name: 'placeholder',
+               email: 'placeholder@example.com',
+            }
+            const committer = {
+               name: 'placeholder',
+               email: 'placeholder@example.com',
+            }
 
-            // await oldFiles.map(filepath => {
-            //    return git.remove({
-            //       dir: `${root}${getRepoPath(filepath)}`,
-            //       filepath: getFilePath(filepath),
-            //    })
-            // })
+            await oldFiles.map(filepath => {
+               return git.remove({
+                  dir: `${root}${getRepoPath(filepath)}`,
+                  filepath: getFilePath(filepath),
+               })
+            })
 
-            // await newFiles.map(async filepath => {
-            //    try {
-            //       const sha = await dailygit.git.addAndCommit(
-            //          {
-            //             repoPath: `${root}${getRepoPath(filepath)}`,
-            //             filePath: getFilePath(filepath),
-            //          },
-            //          author,
-            //          committer,
-            //          `Moved: ${path.basename(filepath)} from ${path.basename(
-            //             args.oldPath
-            //          )} to ${path.basename(args.newPath)}`
-            //       )
+            await newFiles.map(async filepath => {
+               try {
+                  const sha = await dailygit.git.addAndCommit(
+                     {
+                        repoPath: `${root}${getRepoPath(filepath)}`,
+                        filePath: getFilePath(filepath),
+                     },
+                     author,
+                     committer,
+                     `Moved: ${path.basename(filepath)} from ${path.basename(
+                        args.oldPath
+                     )} to ${path.basename(args.newPath)}`
+                  )
 
-            //       // Database
-            //    } catch (error) {
-            //       throw error
-            //    }
-            // })
+                  //       // Database
+                  await dailygit.database
+                     .renameRecordedFile({
+                        oldFilePath: oldFiles[newFiles.indexOf(filepath)],
+                        newFilePath: filepath,
+                        fileName: path.basename(filepath),
+                        lastSaved: new Date().toISOString(),
+                     })
+                     .catch(error => console.error(error))
+               } catch (error) {
+                  throw error
+               }
+            })
 
             return {
                success: true,
@@ -140,30 +152,38 @@ const resolvers = {
             await dailygit.files.createFile(`${root}${args.path}`, args.content)
 
             // Git
-            // const author = {
-            //    name: 'placeholder',
-            //    email: 'placeholder@example.com',
-            // }
-            // const committer = {
-            //    name: 'placeholder',
-            //    email: 'placeholder@example.com',
-            // }
+            const author = {
+               name: 'placeholder',
+               email: 'placeholder@example.com',
+            }
+            const committer = {
+               name: 'placeholder',
+               email: 'placeholder@example.com',
+            }
 
-            // const sha = await dailygit.git.addAndCommit(
-            //    {
-            //       repoPath: `${root}${getRepoPath(args.path)}`,
-            //       filePath: getFilePath(args.path),
-            //    },
-            //    author,
-            //    committer,
-            //    `Added: ${path.basename(args.path)}`
-            // )
+            const sha = await dailygit.git.addAndCommit(
+               {
+                  repoPath: `${root}${getRepoPath(args.path)}`,
+                  filePath: getFilePath(args.path),
+               },
+               author,
+               committer,
+               `Added: ${path.basename(args.path)}`
+            )
 
             // Database
+            const record = await dailygit.database.createFileRecord({
+               fileType: path.basename(args.path).split('.').pop(),
+               fileName: path.basename(args.path),
+               path: args.path,
+               lastSaved: new Date().toISOString(),
+            })
 
             return {
                success: true,
-               message: `File ${path.basename(args.path)} has been created`,
+               message: `File ${path.basename(
+                  args.path
+               )} has been created with fileId: ${record}`,
             }
          } catch (error) {
             return {
@@ -178,23 +198,26 @@ const resolvers = {
             await dailygit.files.deleteFile(`${root}${args.path}`)
 
             // Git
-            // const author = {
-            //    name: 'placeholder',
-            //    email: 'placeholder@example.com',
-            // }
-            // const committer = {
-            //    name: 'placeholder',
-            //    email: 'placeholder@example.com',
-            // }
-            // await dailygit.git.removeAndCommit(
-            //    {
-            //       repoPath: `${root}${getRepoPath(args.path)}`,
-            //       filePath: getFilePath(args.path),
-            //    },
-            //    author,
-            //    committer
-            // )
+            const author = {
+               name: 'placeholder',
+               email: 'placeholder@example.com',
+            }
+            const committer = {
+               name: 'placeholder',
+               email: 'placeholder@example.com',
+            }
+            await dailygit.git.removeAndCommit(
+               {
+                  repoPath: `${root}${getRepoPath(args.path)}`,
+                  filePath: getFilePath(args.path),
+               },
+               author,
+               committer
+            )
             // Database
+            await dailygit.database
+               .deleteRecordedFile({ path: args.path })
+               .catch(error => console.error(error))
 
             return {
                success: true,
@@ -213,25 +236,31 @@ const resolvers = {
             await dailygit.files.updateFile(`${root}${args.path}`, args.content)
 
             // Git
-            // const author = {
-            //    name: 'placeholder',
-            //    email: 'placeholder@example.com',
-            // }
-            // const committer = {
-            //    name: 'placeholder',
-            //    email: 'placeholder@example.com',
-            // }
-            // const sha = await dailygit.git.addAndCommit(
-            //    {
-            //       repoPath: `${root}${getRepoPath(args.path)}`,
-            //       filePath: getFilePath(args.path),
-            //    },
-            //    author,
-            //    committer,
-            //    args.message
-            // )
+            const author = {
+               name: 'placeholder',
+               email: 'placeholder@example.com',
+            }
+            const committer = {
+               name: 'placeholder',
+               email: 'placeholder@example.com',
+            }
+            const sha = await dailygit.git.addAndCommit(
+               {
+                  repoPath: `${root}${getRepoPath(args.path)}`,
+                  filePath: getFilePath(args.path),
+               },
+               author,
+               committer,
+               args.message
+            )
 
             // Database
+            await dailygit.database
+               .updateRecordedFile({
+                  path: args.path,
+                  lastSaved: new Date().toISOString(),
+               })
+               .catch(error => console.error(error))
 
             return {
                success: true,
@@ -250,6 +279,13 @@ const resolvers = {
             await dailygit.files.updateFile(`${root}${args.path}`, args.content)
 
             // Database
+            await dailygit.database
+               .updateRecordedFile({
+                  path: args.path,
+                  lastSaved: new Date().toISOString(),
+               })
+               .catch(error => console.error(error))
+
             return {
                success: true,
                message: `File: ${path.basename(args.path)} has been updated!`,
@@ -270,33 +306,41 @@ const resolvers = {
             )
 
             // Git
-            // const author = {
-            //    name: 'placeholder',
-            //    email: 'placeholder@example.com',
-            // }
-            // const committer = {
-            //    name: 'placeholder',
-            //    email: 'placeholder@example.com',
-            // }
+            const author = {
+               name: 'placeholder',
+               email: 'placeholder@example.com',
+            }
+            const committer = {
+               name: 'placeholder',
+               email: 'placeholder@example.com',
+            }
 
-            // await git.remove({
-            //    dir: `${root}${getRepoPath(args.oldPath)}`,
-            //    filepath: getFilePath(args.oldPath),
-            // })
+            await git.remove({
+               dir: `${root}${getRepoPath(args.oldPath)}`,
+               filepath: getFilePath(args.oldPath),
+            })
 
-            // const sha = await dailygit.git.addAndCommit(
-            //    {
-            //       repoPath: `${root}${getRepoPath(args.newPath)}`,
-            //       filePath: getFilePath(args.newPath),
-            //    },
-            //    author,
-            //    committer,
-            //    `Renamed: ${path.basename(args.oldPath)} file to ${path.basename(
-            //       args.newPath
-            //    )}`
-            // )
+            const sha = await dailygit.git.addAndCommit(
+               {
+                  repoPath: `${root}${getRepoPath(args.newPath)}`,
+                  filePath: getFilePath(args.newPath),
+               },
+               author,
+               committer,
+               `Renamed: ${path.basename(args.oldPath)} file to ${path.basename(
+                  args.newPath
+               )}`
+            )
 
             // Database
+            await dailygit.database
+               .renameRecordedFile({
+                  oldFilePath: args.oldPath,
+                  newFilePath: args.newPath,
+                  fileName: path.basename(args.newPath),
+                  lastSaved: new Date().toISOString(),
+               })
+               .catch(error => console.error(error))
 
             return {
                success: true,
