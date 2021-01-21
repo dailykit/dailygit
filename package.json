@@ -21,6 +21,10 @@
     "esm": "^3.2.25",
     "nodemon": "^2.0.7"
   },
+  "nodemonConfig": {
+    "ignore": ["./templates"]
+  },
+
   "scripts": {
     "dev": "nodemon -r esm index.js",
     "clean": "rm -rf build && mkdir build",

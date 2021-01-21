@@ -172,12 +172,7 @@ const resolvers = {
             )
 
             // Database
-            const record = await dailygit.database.createFileRecord({
-               fileType: path.basename(args.path).split('.').pop(),
-               fileName: path.basename(args.path),
-               path: args.path,
-               lastSaved: new Date().toISOString(),
-            })
+            const record = await dailygit.database.createFileRecord(args.path)
 
             return {
                success: true,

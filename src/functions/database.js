@@ -5,20 +5,30 @@ const graphQLClient = new GraphQLClient(process.env.DATA_HUB_URI, {
       'x-hasura-admin-secret': process.env.HASURA_GRAPHQL_ADMIN_SECRET,
    },
 })
-const createFileRecord = async object => {
-   const mutation = gql`
-      mutation INSERT_FILE($object: editor_file_insert_input!) {
-         insert_editor_file_one(object: $object) {
-            id
-         }
+const createMutation = gql`
+   mutation INSERT_FILE($object: editor_file_insert_input!) {
+      insert_editor_file_one(object: $object) {
+         id
       }
-   `
-   const variables = {
-      object,
    }
+`
+const createFileRecord = async path => {
+   try {
+      const variables = {
+         object: {
+            fileType: nodePath.basename(path).split('.').pop(),
+            fileName: nodePath.basename(path),
+            path: path,
+            lastSaved: new Date().toISOString(),
+         },
+      }
+      console.log(variables)
 
-   const data = await graphQLClient.request(mutation, variables)
-   return data.insert_editor_file_one.id
+      const data = await graphQLClient.request(createMutation, variables)
+      return data.insert_editor_file_one.id
+   } catch (err) {
+      console.error(err)
+   }
 }
 
 const updateRecordedFile = async ({ path, lastSaved }) => {
